@@ -142,6 +142,12 @@ public final class Dcf77Record {
     this.hashCode = Objects.hashCode(this.bitString);
   }
 
+  /**
+   * Encode integer value as BCD.
+   *
+   * @param value must be in 0..255 diapason.
+   * @return encoded BCD value
+   */
   public static int toBCD(int value) {
     if (value < 0 || value > 255) {
       throw new IllegalArgumentException("Value must be between 0 and 255");
@@ -158,6 +164,12 @@ public final class Dcf77Record {
     return bcd;
   }
 
+  /**
+   * Decode BCD value as integer.
+   *
+   * @param bcdValue BCD value.
+   * @return decoded value 0..255
+   */
   public static int fromBCD(int bcdValue) {
     int value = 0;
     int factor = 1;
@@ -171,6 +183,13 @@ public final class Dcf77Record {
     return value;
   }
 
+  /**
+   * Get reversed bit value.
+   *
+   * @param value              source value
+   * @param numberOfLowestBits number of lowest bits to reverse
+   * @return result with reversed lowest bits
+   */
   public static long reverseLowestBits(final long value, final int numberOfLowestBits) {
     long acc = 0L;
     long src = value;
@@ -474,16 +493,26 @@ public final class Dcf77Record {
     return reverseLowestBits(bits(this.bitString, 50, 0b1111_1111L), 8);
   }
 
+  /**
+   * Calculate even bit for date.
+   *
+   * @return true if even and false otherwise
+   */
   public boolean isDateEvenParity() {
     return bits(this.bitString, 58, 1L) != 0L;
   }
 
+  /**
+   * Check minute mark flag.
+   *
+   * @return true or false, must be false for valid record.
+   */
   public boolean isMinuteMark() {
     return bits(this.bitString, 59, 1L) != 0L;
   }
 
   /**
-   * Decode as zoned date time for CET zone.
+   * Decode as zoned date time for CET zone. Year will be since 2000.
    *
    * @return decoded zoned date time in CET zone
    */
@@ -509,6 +538,11 @@ public final class Dcf77Record {
     return result;
   }
 
+  /**
+   * Check that the record has valid state of its bit fields. It checks even and synchro flags.
+   *
+   * @return true if the record has valid data, false otherwise.
+   */
   public boolean isValid() {
     if (
         bits(this.bitString, 0, 1L) != 0L
@@ -518,13 +552,13 @@ public final class Dcf77Record {
       return false;
     }
 
-    if ((calcEvenParity(this.bitString, 21, 28) ? 1L : 0L) != bits(this.bitString, 28, 1L)) {
+    if ((this.calcEvenParity(this.bitString, 21, 28) ? 1L : 0L) != bits(this.bitString, 28, 1L)) {
       return false;
     }
-    if ((calcEvenParity(this.bitString, 29, 35) ? 1L : 0L) != bits(this.bitString, 35, 1L)) {
+    if ((this.calcEvenParity(this.bitString, 29, 35) ? 1L : 0L) != bits(this.bitString, 35, 1L)) {
       return false;
     }
-    return (calcEvenParity(this.bitString, 36, 58) ? 1L : 0L) == bits(this.bitString, 58, 1L);
+    return (this.calcEvenParity(this.bitString, 36, 58) ? 1L : 0L) == bits(this.bitString, 58, 1L);
   }
 
 
