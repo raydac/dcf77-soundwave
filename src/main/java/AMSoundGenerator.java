@@ -1,5 +1,5 @@
 import com.igormaznitsa.dcf77soundwave.Dcf77Record;
-import com.igormaznitsa.dcf77soundwave.JavaSoundDcf77SignalRenderer;
+import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import javax.sound.sampled.AudioSystem;
@@ -43,8 +43,8 @@ public class AMSoundGenerator {
   }
 
   public static void main(String[] args) throws LineUnavailableException, IOException {
-    JavaSoundDcf77SignalRenderer sounder =
-        new JavaSoundDcf77SignalRenderer(60, 48000, AudioSystem::getSourceDataLine);
+    Dcf77SignalSoundRenderer sounder =
+        new Dcf77SignalSoundRenderer(60, 48000, AudioSystem::getSourceDataLine);
     sounder.initAudioLine();
     sounder.startAudio();
 
@@ -74,8 +74,8 @@ public class AMSoundGenerator {
           Dcf77Record.toBinaryString(soundData, true));
       now = now.plusMinutes(1L);
       boolean queued = sounder.offer(secondsAwareness, soundData, 15500,
-          JavaSoundDcf77SignalRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
-          JavaSoundDcf77SignalRenderer.SignalShape.TRIANGLE);
+          Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
+          Dcf77SignalSoundRenderer.SignalShape.TRIANGLE);
       secondsAwareness = false;
       if (queued) {
         System.out.println("Queued");

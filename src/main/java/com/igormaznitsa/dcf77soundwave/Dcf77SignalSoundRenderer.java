@@ -19,9 +19,18 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-public class JavaSoundDcf77SignalRenderer {
+/**
+ * Renderer to translate the DCF77 signal through Java Sound API or write it as a WAV file.
+ *
+ * @author Igor Maznitsa
+ */
+public class Dcf77SignalSoundRenderer {
 
+  /**
+   * Standard amplitude deviation for DCF77 amplitude modulation.
+   */
   public static final double DCF77_STANDARD_AMPLITUDE_DEVIATION = 0.85d;
+
   private static final int SAMPLE_BYTES = 2;
   private final int samplesPerReset;
   private final int samplesPerSet;
@@ -33,7 +42,14 @@ public class JavaSoundDcf77SignalRenderer {
   private final SourceDataLineSupplier sourceDataLineSupplier;
   private final AtomicReference<SourceDataLine> sourceDataLine = new AtomicReference<>();
 
-  public JavaSoundDcf77SignalRenderer(
+  /**
+   * Capacity of internal queue for DCF77 records.
+   *
+   * @param queueCapacity          capacity of internal queue for DCF77 records
+   * @param sampleRate             sample rate for audio signal, usually 44100 or 48000.
+   * @param sourceDataLineSupplier supplier of SourceDataLine for AudioFormat
+   */
+  public Dcf77SignalSoundRenderer(
       final int queueCapacity,
       final int sampleRate,
       final SourceDataLineSupplier sourceDataLineSupplier) {
@@ -45,21 +61,46 @@ public class JavaSoundDcf77SignalRenderer {
     this.sourceDataLineSupplier = sourceDataLineSupplier;
   }
 
+  /**
+   * Check that internal queue is empty.
+   *
+   * @return true if empty, false otherwise
+   */
   public boolean isEmpty() {
     this.assertNotDisposed();
     return this.renderQueue.isEmpty();
   }
 
+  /**
+   * Get current internal queue size.
+   *
+   * @return size of internal queue
+   */
   public int getQueueSize() {
     this.assertNotDisposed();
     return this.renderQueue.size();
   }
 
+  /**
+   * Reset internal queue.
+   */
   public void resetQueue() {
     this.assertNotDisposed();
     this.renderQueue.clear();
   }
 
+  /**
+   * Render WAV file from DCF77 record list.
+   *
+   * @param secondsAwareness   if true then number of seconds will be calculated and packet won't be started from first one.
+   * @param recordList         list of DCF77 records
+   * @param freqHz             carrier wave frequency in Hz.
+   * @param amplitudeDeviation AM amplitude deviation.
+   * @param signalShape        signal shape to form audio signal.
+   * @return formed WAV byte array.
+   * @throws IOException if any problem during io operations.
+   * @see #DCF77_STANDARD_AMPLITUDE_DEVIATION
+   */
   public byte[] makeWavFileData(
       final boolean secondsAwareness,
       final List<Dcf77Record> recordList,
