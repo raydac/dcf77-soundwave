@@ -61,12 +61,15 @@ public class AppPanel extends JPanel {
     final Font defaultButtonFont = UIManager.getFont("Button.font");
 
     this.buttonSine = new ControlButton("w");
+    this.buttonSine.setToolTipText("Sine wave");
     this.buttonSine.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
     this.buttonSquare = new ControlButton("Q");
+    this.buttonSquare.setToolTipText("Square wave");
     this.buttonSquare.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
     this.buttonTriangle = new ControlButton("T");
+    this.buttonTriangle.setToolTipText("Triangular wave");
     this.buttonTriangle.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
 
@@ -76,16 +79,27 @@ public class AppPanel extends JPanel {
     buttonGroupSignal.add(this.buttonTriangle);
 
     this.button13700 = new ControlButton("13700 Hz");
+    this.button13700.setToolTipText("Carrier frequency 13700 Hz");
+
     this.button15500 = new ControlButton("15500 Hz");
+    this.button15500.setToolTipText("Carrier frequency 15500 Hz");
+
     this.button17125 = new ControlButton("17125 Hz");
+    this.button17125.setToolTipText("Carrier frequency 17125 Hz");
+
     final ButtonGroup buttonGroupCarrier = new ButtonGroup();
     buttonGroupCarrier.add(this.button13700);
     buttonGroupCarrier.add(this.button15500);
     buttonGroupCarrier.add(this.button17125);
 
     this.button44100 = new ControlButton("44.1 KHz");
+    this.button44100.setToolTipText("Sound-card sampling 44100 Hz");
+
     this.button48000 = new ControlButton("48 KHz");
+    this.button48000.setToolTipText("Sound-card sampling 48000 Hz");
+
     this.button96000 = new ControlButton("96 KHz");
+    this.button96000.setToolTipText("Sound-card sampling 96000 Hz");
 
     final ButtonGroup buttonGroupSampleRate = new ButtonGroup();
     buttonGroupSampleRate.add(this.button44100);
