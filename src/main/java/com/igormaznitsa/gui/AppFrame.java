@@ -97,13 +97,13 @@ public final class AppFrame extends JFrame {
     List<OutputLineInfo> outputLines = new ArrayList<>();
     Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
 
-    for (Mixer.Info mixerInfo : mixerInfos) {
-      Mixer mixer = AudioSystem.getMixer(mixerInfo);
-      Line.Info[] sourceLineInfos = mixer.getSourceLineInfo();
+    for (final Mixer.Info mixerInfo : mixerInfos) {
+      final Mixer mixer = AudioSystem.getMixer(mixerInfo);
+      final Line.Info[] sourceLineInfos = mixer.getSourceLineInfo();
 
-      for (Line.Info lineInfo : sourceLineInfos) {
+      for (final Line.Info lineInfo : sourceLineInfos) {
         if (lineInfo instanceof DataLine.Info) {
-          DataLine.Info dataLineInfo = (DataLine.Info) lineInfo;
+          final DataLine.Info dataLineInfo = (DataLine.Info) lineInfo;
 
           if (SourceDataLine.class.isAssignableFrom(dataLineInfo.getLineClass())) {
             try {
