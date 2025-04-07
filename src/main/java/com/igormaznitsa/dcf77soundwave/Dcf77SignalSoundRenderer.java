@@ -8,8 +8,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.sound.sampled.AudioFileFormat;
@@ -41,6 +43,7 @@ public class Dcf77SignalSoundRenderer {
   private final BlockingQueue<RenderedRecord> renderQueue;
   private final SourceDataLineSupplier sourceDataLineSupplier;
   private final AtomicReference<SourceDataLine> sourceDataLine = new AtomicReference<>();
+  private final List<Dcf77SignalSoundRendererListener> listeners = new CopyOnWriteArrayList<>();
 
   /**
    * Capacity of internal queue for DCF77 records.
@@ -59,6 +62,15 @@ public class Dcf77SignalSoundRenderer {
     this.samplesPerReset = this.sampleRate / 10;
     this.audioFormat = new AudioFormat(sampleRate, 8 * SAMPLE_BYTES, 1, true, false);
     this.sourceDataLineSupplier = sourceDataLineSupplier;
+  }
+
+  public void addDcf77SignalSoundRendererListener(final Dcf77SignalSoundRendererListener listener) {
+    this.listeners.add(Objects.requireNonNull(listener));
+  }
+
+  public void removeDcf77SignalSoundRendererListener(
+      final Dcf77SignalSoundRendererListener listener) {
+    this.listeners.remove(listener);
   }
 
   /**
@@ -101,7 +113,7 @@ public class Dcf77SignalSoundRenderer {
    * @throws IOException if any problem during io operations.
    * @see #DCF77_STANDARD_AMPLITUDE_DEVIATION
    */
-  public byte[] makeWavFileData(
+  public byte[] renderWav(
       final boolean secondsAwareness,
       final List<Dcf77Record> recordList,
       final int freqHz,
@@ -197,6 +209,11 @@ public class Dcf77SignalSoundRenderer {
         Thread.currentThread().interrupt();
         break;
       }
+
+      this.listeners.forEach(x -> {
+        x.onNextRecord(this, nextRenderedRecord.dcf77Record);
+      });
+
       final SourceDataLine line = this.sourceDataLine.get();
       if (line == null) {
         return;
@@ -239,7 +256,7 @@ public class Dcf77SignalSoundRenderer {
         throw new IllegalStateException("Can't find source data line for " + this.audioFormat);
       }
       try {
-        this.sourceDataLine.get().open(this.audioFormat, SAMPLE_BYTES * this.sampleRate * 2);
+        this.sourceDataLine.get().open(this.audioFormat, SAMPLE_BYTES * (this.sampleRate / 4));
       } catch (LineUnavailableException ex) {
         throw new IllegalStateException("Line unavailable", ex);
       }
@@ -326,6 +343,11 @@ public class Dcf77SignalSoundRenderer {
       return this.calculator.apply(sampleIndex, freq, amplitude, sampleRate);
     }
 
+  }
+
+  @FunctionalInterface
+  public interface Dcf77SignalSoundRendererListener {
+    void onNextRecord(Dcf77SignalSoundRenderer source, Dcf77Record record);
   }
 
   @FunctionalInterface

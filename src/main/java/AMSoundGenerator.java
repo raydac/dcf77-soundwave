@@ -45,6 +45,12 @@ public class AMSoundGenerator {
   public static void main(String[] args) throws LineUnavailableException, IOException {
     Dcf77SignalSoundRenderer sounder =
         new Dcf77SignalSoundRenderer(60, 48000, AudioSystem::getSourceDataLine);
+
+    sounder.addDcf77SignalSoundRendererListener(
+        (source, record) -> {
+          System.out.println("CURRENT: " + record);
+        });
+
     sounder.initAudioLine();
     sounder.startAudio();
 
@@ -70,16 +76,12 @@ public class AMSoundGenerator {
       if (!soundData.isValid()) {
         throw new Error("ERROR");
       }
-      System.out.println("TIME: " + now + " REC " + soundData + "  " +
-          Dcf77Record.toBinaryString(soundData, true));
       now = now.plusMinutes(1L);
       boolean queued = sounder.offer(secondsAwareness, soundData, 15500,
           Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
           Dcf77SignalSoundRenderer.SignalShape.TRIANGLE);
       secondsAwareness = false;
-      if (queued) {
-        System.out.println("Queued");
-      } else {
+      if (!queued) {
         break;
       }
     }
