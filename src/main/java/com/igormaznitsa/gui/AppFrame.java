@@ -30,16 +30,14 @@ public final class AppFrame extends JFrame {
 
   private final Timer timer;
   private final AppPanel appPanel;
-  private final AtomicReference<Mixer.Info> currentMixer = new AtomicReference<>();
+  private final AtomicReference<OutputLineInfo> currentMixer = new AtomicReference<>();
 
   public AppFrame() {
     super("Central European Time DCF77 sound generator");
 
     this.currentMixer.set(findDefaultOutputMixer());
-
     this.setJMenuBar(this.makeMenuBar());
-
-    this.appPanel = new AppPanel();
+    this.appPanel = new AppPanel(this.currentMixer::get);
 
     this.setContentPane(this.appPanel);
     this.setLocationRelativeTo(null);
@@ -50,7 +48,8 @@ public final class AppFrame extends JFrame {
     this.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        timer.stop();
+        AppFrame.this.appPanel.dispose();
+        AppFrame.this.timer.stop();
         AppFrame.this.dispose();
       }
     });
@@ -62,7 +61,7 @@ public final class AppFrame extends JFrame {
 
   }
 
-  public static Mixer.Info findDefaultOutputMixer() {
+  public static OutputLineInfo findDefaultOutputMixer() {
     try {
       AudioFormat format = new AudioFormat(44100, 16, 2, true, false);
       DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
@@ -81,7 +80,7 @@ public final class AppFrame extends JFrame {
           SourceDataLine line = (SourceDataLine) mixer.getLine(info);
           // Compare classes and hashcodes to find a match
           if (line.getClass().equals(defaultLine.getClass())) {
-            return mixerInfo;
+            return new OutputLineInfo(line, mixerInfo);
           }
         } catch (LineUnavailableException | IllegalArgumentException e) {
           // Skip unavailable mixers
@@ -120,6 +119,27 @@ public final class AppFrame extends JFrame {
     }
 
     return outputLines;
+  }
+
+  public static void main(String... args) {
+    SwingUtilities.invokeLater(() -> {
+      try {
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+          if ("Nimbus".equals(info.getName())) {
+            UIManager.setLookAndFeel(info.getClassName());
+            break;
+          }
+        }
+      } catch (Exception e) {
+        try {
+          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+          // nnnn
+        }
+      }
+      final AppFrame f = new AppFrame();
+      f.setVisible(true);
+    });
   }
 
   private JMenuBar makeMenuBar() {
@@ -187,29 +207,6 @@ public final class AppFrame extends JFrame {
     public String toString() {
       return mixerInfo.getName() + " - " + mixerInfo.getDescription();
     }
-  }
-
-  public static void main(String... args) {
-    SwingUtilities.invokeLater(() -> {
-      try {
-        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-          if ("Nimbus".equals(info.getName())) {
-            UIManager.setLookAndFeel(info.getClassName());
-            break;
-          }
-        }
-      } catch (Exception e) {
-        try {
-          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-          // nnnn
-        }
-      }
-
-
-      final AppFrame f = new AppFrame();
-      f.setVisible(true);
-    });
   }
 
 }

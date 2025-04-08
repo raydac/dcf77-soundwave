@@ -146,7 +146,9 @@ public class Dcf77SignalSoundRenderer {
       final int freqHz,
       final double amplitudeDeviation,
       final SignalShape signalShape) {
-    this.assertNotDisposed();
+    if (this.disposed.get()) {
+      return false;
+    }
 
     final byte[] rendered = makeWavDataAlignedForMinute(
         secondsAwareness,
@@ -221,11 +223,15 @@ public class Dcf77SignalSoundRenderer {
       if (line.isOpen()) {
         int length = nextRenderedRecord.soundData.length;
         int offset = 0;
-        while (length > 0 && !Thread.currentThread().isInterrupted()) {
-          final int written =
-              line.write(nextRenderedRecord.soundData, offset, length);
-          length -= written;
-          offset += written;
+        while (length > 0 && !Thread.currentThread().isInterrupted() && !this.disposed.get()) {
+          try {
+            final int written =
+                line.write(nextRenderedRecord.soundData, offset, length);
+            length -= written;
+            offset += written;
+          } catch (IllegalArgumentException ex) {
+            // looks like interrupted
+          }
         }
       }
     }
@@ -256,14 +262,14 @@ public class Dcf77SignalSoundRenderer {
         throw new IllegalStateException("Can't find source data line for " + this.audioFormat);
       }
       try {
-        this.sourceDataLine.get().open(this.audioFormat, SAMPLE_BYTES * (this.sampleRate / 4));
+        this.sourceDataLine.get().open(this.audioFormat, this.sampleRate);
       } catch (LineUnavailableException ex) {
         throw new IllegalStateException("Line unavailable", ex);
       }
 
       final Thread thread =
           new Thread(null, this::runnable, "dcf77-sounder-" + System.identityHashCode(this), 16384);
-      thread.setPriority(Thread.MAX_PRIORITY);
+      thread.setPriority(Thread.NORM_PRIORITY);
       thread.setDaemon(true);
       if (this.thread.compareAndSet(null, thread)) {
         thread.start();
@@ -280,7 +286,10 @@ public class Dcf77SignalSoundRenderer {
     this.renderQueue.clear();
     final SourceDataLine line = this.sourceDataLine.get();
     if (line != null) {
-      line.start();
+      synchronized (line) {
+        line.start();
+        line.drain();
+      }
     }
   }
 
@@ -289,26 +298,54 @@ public class Dcf77SignalSoundRenderer {
     this.renderQueue.clear();
     final SourceDataLine line = this.sourceDataLine.get();
     if (line != null) {
-      line.stop();
+      synchronized (line) {
+        try {
+          line.stop();
+        } catch (Exception ignored) {
+        }
+        try {
+          line.flush();
+        } catch (Exception ignored) {
+        }
+        try {
+          line.close();
+        } catch (Exception ignored) {
+        }
+      }
     }
   }
 
   public void dispose() {
-    if (this.disposed.compareAndExchange(false, true)) {
+    if (this.disposed.compareAndSet(false, true)) {
+      this.renderQueue.clear();
       final SourceDataLine line = this.sourceDataLine.getAndSet(null);
       if (line != null) {
         final Thread thread = this.thread.getAndSet(null);
         if (thread != null) {
           thread.interrupt();
         }
-        try {
-          line.stop();
-        } finally {
-          line.close();
+        synchronized (line) {
+          try {
+            try {
+              line.stop();
+            } catch (Exception ignored) {
+            }
+            try {
+              line.flush();
+            } catch (Exception ignored) {
+            }
+
+            try {
+              line.close();
+            } catch (Exception ignored) {
+            }
+          } finally {
+            line.close();
+          }
         }
         if (thread != null) {
           try {
-            thread.join(5000L);
+            thread.join(3000L);
           } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
           }

@@ -1,23 +1,30 @@
 package com.igormaznitsa.gui;
 
+import static java.util.Objects.requireNonNull;
+
+import com.igormaznitsa.dcf77soundwave.Dcf77Record;
+import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.util.function.Consumer;
+import java.time.ZonedDateTime;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class AppPanel extends JPanel {
 
   private final TimePanel timePanel;
   private final StartStopButton buttonStartStop;
-  private final JProgressBar progressBarTime;
+  private final RadioSignalIndicator progressBarTime;
   private final Component progressBarReplacement;
   private final ControlButton buttonSine;
   private final ControlButton buttonSquare;
@@ -29,13 +36,14 @@ public class AppPanel extends JPanel {
   private final ControlButton button15500;
   private final ControlButton button17125;
 
-  public AppPanel() {
+  private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
+  private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
+
+  public AppPanel(final Supplier<AppFrame.OutputLineInfo> mixerSupplier) {
     super(new BorderLayout(0, 0));
+    this.mixerSupplier = requireNonNull(mixerSupplier);
     this.timePanel = new TimePanel();
-    this.progressBarTime = new JProgressBar(JProgressBar.HORIZONTAL);
-    this.progressBarTime.setStringPainted(false);
-    this.progressBarTime.setBorderPainted(false);
-    this.progressBarTime.setIndeterminate(true);
+    this.progressBarTime = new RadioSignalIndicator();
 
     this.add(this.timePanel, BorderLayout.CENTER);
 
@@ -125,29 +133,160 @@ public class AppPanel extends JPanel {
     this.button15500.setSelected(true);
 
 
-    final Consumer<Boolean> controlEnabler = flag -> {
-      this.buttonSine.setEnabled(flag);
-      this.buttonSquare.setEnabled(flag);
-      this.buttonTriangle.setEnabled(flag);
-      this.button44100.setEnabled(flag);
-      this.button48000.setEnabled(flag);
-      this.button96000.setEnabled(flag);
-      this.button13700.setEnabled(flag);
-      this.button15500.setEnabled(flag);
-      this.button17125.setEnabled(flag);
-    };
-
     this.buttonStartStop.addActionListener(e -> {
       if (this.buttonStartStop.isSelected()) {
-        this.progressBarTime.setVisible(true);
-        this.progressBarReplacement.setVisible(false);
-        controlEnabler.accept(false);
+        final AppFrame.OutputLineInfo lineInfo = this.mixerSupplier.get();
+        if (lineInfo == null) {
+          JOptionPane.showMessageDialog(this, "No selected output channel!", "No output",
+              JOptionPane.WARNING_MESSAGE);
+          this.buttonStartStop.setSelected(false);
+        }
+        this.startRendering(lineInfo);
       } else {
-        this.progressBarTime.setVisible(false);
-        this.progressBarReplacement.setVisible(true);
-        controlEnabler.accept(true);
+        this.stopRendering(null);
       }
     });
+  }
+
+  public void dispose() {
+    this.buttonStartStop.setSelected(false);
+    this.stopRendering(null);
+  }
+
+  private void sendTimeData(
+      final Dcf77SignalSoundRenderer renderer,
+      final int numberOfRenderedMinutes,
+      final int freqHz,
+      final Dcf77SignalSoundRenderer.SignalShape shape
+  ) {
+    final Thread thread = new Thread(() -> {
+      ZonedDateTime zonedDateTime = ZonedDateTime.now(Dcf77Record.ZONE_CET);
+      boolean addedSuccessfully = true;
+      for (int i = 0;
+           i < numberOfRenderedMinutes && !renderer.isDisposed() &&
+               !Thread.currentThread().isInterrupted(); i++) {
+        addedSuccessfully &= renderer.offer(i == 0, new Dcf77Record(zonedDateTime), freqHz,
+            Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION, shape);
+        zonedDateTime = zonedDateTime.plusMinutes(1);
+      }
+      final Dcf77Record stopRecord = new Dcf77Record(zonedDateTime);
+      addedSuccessfully &= renderer.offer(false, stopRecord, freqHz,
+          Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION, shape);
+
+      if (!addedSuccessfully) {
+        this.stopRendering(
+            () -> JOptionPane.showMessageDialog(this, "Internal error! Queue too small!", "Error",
+                JOptionPane.ERROR_MESSAGE));
+        SwingUtilities.invokeLater(() -> {
+          JOptionPane.showMessageDialog(this, "Error during queue filling");
+        });
+        return;
+      }
+      renderer.addDcf77SignalSoundRendererListener(
+          (source, record) -> {
+            if (source == renderer
+                && !source.isDisposed()
+                && stopRecord == record) {
+              this.stopRendering(
+                  () -> JOptionPane.showMessageDialog(this, "Rendering successfully completed",
+                      "Info",
+                      JOptionPane.INFORMATION_MESSAGE));
+            }
+          });
+    }, "fill-time");
+    thread.setDaemon(true);
+    thread.start();
+  }
+
+  private void startRendering(final AppFrame.OutputLineInfo output) {
+    if (this.currentRenderer.get() == null) {
+      this.progressBarTime.setVisible(true);
+      this.progressBarReplacement.setVisible(false);
+      this.setEnableButtons(false);
+
+      final int sampleRate;
+      if (this.button44100.isSelected()) {
+        sampleRate = 44100;
+      } else if (this.button48000.isSelected()) {
+        sampleRate = 48000;
+      } else {
+        sampleRate = 96000;
+      }
+
+      final Dcf77SignalSoundRenderer renderer = new Dcf77SignalSoundRenderer(70, sampleRate,
+          audioFormat -> output.line);
+
+      if (this.currentRenderer.compareAndSet(null, renderer)) {
+        try {
+          renderer.initAudioLine();
+          renderer.startAudio();
+
+          final Dcf77SignalSoundRenderer.SignalShape shape;
+          if (this.buttonSine.isSelected()) {
+            shape = Dcf77SignalSoundRenderer.SignalShape.SIN;
+          } else if (this.buttonSquare.isSelected()) {
+            shape = Dcf77SignalSoundRenderer.SignalShape.SQUARE;
+          } else {
+            shape = Dcf77SignalSoundRenderer.SignalShape.TRIANGLE;
+          }
+
+          final int freq;
+          if (this.button13700.isSelected()) {
+            freq = 13700;
+          } else if (this.button15500.isSelected()) {
+            freq = 15500;
+          } else {
+            freq = 17125;
+          }
+
+          this.sendTimeData(renderer, 1, freq, shape);
+        } catch (Exception ex) {
+          renderer.dispose();
+          this.currentRenderer.set(null);
+          this.buttonStartStop.setSelected(false);
+          this.setEnableButtons(true);
+        }
+      }
+    }
+  }
+
+  private void stopRendering(final Runnable nextSwingAction) {
+    final Dcf77SignalSoundRenderer renderer = this.currentRenderer.getAndSet(null);
+    if (renderer != null) {
+      final Thread stopThread = new Thread(renderer::dispose, "stopping");
+      stopThread.setDaemon(true);
+      stopThread.start();
+
+      final Runnable swingAction = () -> {
+        this.progressBarTime.setVisible(false);
+        this.progressBarReplacement.setVisible(true);
+
+        this.setEnableButtons(true);
+        this.buttonStartStop.setSelected(false);
+
+        if (nextSwingAction != null) {
+          nextSwingAction.run();
+        }
+      };
+
+      if (SwingUtilities.isEventDispatchThread()) {
+        swingAction.run();
+      } else {
+        SwingUtilities.invokeLater(swingAction);
+      }
+    }
+  }
+
+  private void setEnableButtons(final boolean flag) {
+    this.buttonSine.setEnabled(flag);
+    this.buttonSquare.setEnabled(flag);
+    this.buttonTriangle.setEnabled(flag);
+    this.button44100.setEnabled(flag);
+    this.button48000.setEnabled(flag);
+    this.button96000.setEnabled(flag);
+    this.button13700.setEnabled(flag);
+    this.button15500.setEnabled(flag);
+    this.button17125.setEnabled(flag);
   }
 
   public TimePanel getTimePanel() {
