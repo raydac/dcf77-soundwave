@@ -6,7 +6,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,8 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 public final class AppFrame extends JFrame {
 
@@ -49,7 +50,6 @@ public final class AppFrame extends JFrame {
     this.appPanel = new AppPanel(this.currentMixer::get);
 
     this.setContentPane(this.appPanel);
-    this.setLocationRelativeTo(null);
     this.pack();
     this.setResizable(false);
     this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -130,25 +130,36 @@ public final class AppFrame extends JFrame {
     return outputLines;
   }
 
-  public static void main(String... args) {
-    SwingUtilities.invokeLater(() -> {
-      try {
-        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-          if ("Nimbus".equals(info.getName())) {
-            UIManager.setLookAndFeel(info.getClassName());
-            break;
-          }
-        }
-      } catch (Exception e) {
+  public static void ensureAppropriateLF() {
+    final Runnable runnable = () -> {
+      boolean systemLook = SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC;
+      if (!systemLook) {
         try {
-          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-          // nnnn
+          for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            if (info.getName().toLowerCase(Locale.ENGLISH).contains("nimbus")) {
+              UIManager.setLookAndFeel(info.getClassName());
+              break;
+            }
+          }
+        } catch (Exception e) {
+          systemLook = true;
         }
       }
-      final AppFrame f = new AppFrame();
-      f.setVisible(true);
-    });
+
+      if (systemLook) {
+        try {
+          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ignore) {
+          // do nothing
+        }
+      }
+    };
+
+    if (SwingUtilities.isEventDispatchThread()) {
+      runnable.run();
+    } else {
+      SwingUtilities.invokeLater(runnable);
+    }
   }
 
   private static final FileFilter FILE_FILTER_WAV =
@@ -200,7 +211,7 @@ public final class AppFrame extends JFrame {
         final byte[] wavData = renderer.renderWav(false, recordList, this.appPanel.getCarrierFreq(),
             Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
             this.appPanel.getSignalShape());
-        Files.write(file.toPath(), wavData);
+        FileUtils.writeByteArrayToFile(file, wavData);
         JOptionPane.showMessageDialog(this,
             "Successfully saved as a WAV file, length " + wavData.length + " byte(s)", "Completed",
             JOptionPane.INFORMATION_MESSAGE);
