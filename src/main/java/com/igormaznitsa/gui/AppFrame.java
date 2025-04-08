@@ -2,14 +2,19 @@ package com.igormaznitsa.gui;
 
 import com.igormaznitsa.dcf77soundwave.Dcf77Record;
 import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
+import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -18,13 +23,16 @@ import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -34,6 +42,7 @@ import javax.swing.event.MenuListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 public final class AppFrame extends JFrame {
@@ -44,6 +53,8 @@ public final class AppFrame extends JFrame {
 
   public AppFrame() {
     super("Central European Time DCF77 sound generator");
+
+    this.setIconImage(GuiUtils.loadIcon("appicon.png").getImage());
 
     this.currentMixer.set(findDefaultOutputMixer());
     this.setJMenuBar(this.makeMenuBar());
@@ -232,25 +243,39 @@ public final class AppFrame extends JFrame {
     final JMenu menuSettings = new JMenu("Settings");
     final JMenu menuHelp = new JMenu("Help");
 
-    final JMenuItem menuSaveAs = new JMenuItem("Save as..");
+    final JMenuItem menuSaveAs = new JMenuItem("Save as..", GuiUtils.loadIcon("file_save_as.png"));
     menuSaveAs.addActionListener(a -> this.saveAs());
 
     menuFile.add(menuSaveAs);
     menuFile.add(new JSeparator());
-    final JMenuItem menuExit = new JMenuItem("Exit");
+    final JMenuItem menuExit = new JMenuItem("Exit", GuiUtils.loadIcon("door_in.png"));
     menuExit.addActionListener(
         x -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
     menuFile.add(menuExit);
 
-    final JMenuItem menuShowHelp = new JMenuItem("Help");
-    final JMenuItem menuDoDonate = new JMenuItem("Donate");
-    final JMenuItem menuShowAbout = new JMenuItem("About");
+    final JMenuItem menuShowHelp = new JMenuItem("Help", GuiUtils.loadIcon("help.png"));
+    final JMenuItem menuDoDonate = new JMenuItem("Donate", GuiUtils.loadIcon("moneybox.png"));
+    final JMenuItem menuShowAbout = new JMenuItem("About", GuiUtils.loadIcon("information.png"));
+
+    menuShowHelp.addActionListener(a -> this.showHelp());
+
+    menuDoDonate.addActionListener(a -> {
+      try {
+        GuiUtils.browseURI(new URI(
+                "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=AHWJHJFBAWGL2"),
+            true);
+      } catch (Exception ex) {
+        // ignore
+      }
+    });
+    menuShowAbout.addActionListener(a -> this.showAbout());
 
     menuHelp.add(menuShowHelp);
     menuHelp.add(menuDoDonate);
     menuHelp.add(menuShowAbout);
 
     final JMenu menuOutputDevices = new JMenu("Output device");
+    menuOutputDevices.setIcon(GuiUtils.loadIcon("sound.png"));
     menuSettings.add(menuOutputDevices);
     menuOutputDevices.addMenuListener(new MenuListener() {
       @Override
@@ -298,6 +323,26 @@ public final class AppFrame extends JFrame {
     menuBar.add(menuHelp);
 
     return menuBar;
+  }
+
+  private void showHelp() {
+    try (final InputStream inputStream = Objects.requireNonNull(
+        AppFrame.class.getResourceAsStream("/help/help.html"))) {
+      final String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+      final JPanel panel = new JPanel(new BorderLayout());
+      final JEditorPane editorPane = new JEditorPane("text/html", text);
+      editorPane.setEditable(false);
+      final JScrollPane scrollPane = new JScrollPane(editorPane);
+      panel.add(scrollPane, BorderLayout.CENTER);
+      GuiUtils.makeOwningDialogResizable(scrollPane);
+      JOptionPane.showMessageDialog(this, scrollPane, "Help", JOptionPane.PLAIN_MESSAGE);
+    } catch (IOException ex) {
+      // ignore
+    }
+  }
+
+  private void showAbout() {
+    JOptionPane.showMessageDialog(this, new AboutPanel(), "About", JOptionPane.PLAIN_MESSAGE);
   }
 
   public static class OutputLineInfo {

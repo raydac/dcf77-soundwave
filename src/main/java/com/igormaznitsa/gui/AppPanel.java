@@ -48,6 +48,7 @@ public class AppPanel extends JPanel {
     this.add(this.timePanel, BorderLayout.CENTER);
 
     this.buttonStartStop = new StartStopButton();
+    this.buttonStartStop.setToolTipText("Start/Stop render sound signal");
     final JPanel bottomPanel = new JPanel(new GridBagLayout());
     final GridBagConstraints gbc = new GridBagConstraints();
     gbc.gridx = 0;
@@ -174,12 +175,15 @@ public class AppPanel extends JPanel {
           Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION, shape);
 
       if (!addedSuccessfully) {
+        final boolean disposeAsCause = renderer.isDisposed();
         this.stopRendering(
             () -> JOptionPane.showMessageDialog(this, "Internal error! Queue too small!", "Error",
                 JOptionPane.ERROR_MESSAGE));
-        SwingUtilities.invokeLater(() -> {
-          JOptionPane.showMessageDialog(this, "Error during queue filling");
-        });
+        if (!disposeAsCause) {
+          SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(this, "Error during queue filling");
+          });
+        }
         return;
       }
       renderer.addDcf77SignalSoundRendererListener(
@@ -217,7 +221,7 @@ public class AppPanel extends JPanel {
           final Dcf77SignalSoundRenderer.SignalShape shape = this.getSignalShape();
           final int freq = this.getCarrierFreq();
 
-          this.sendTimeData(renderer, 1, freq, shape);
+          this.sendTimeData(renderer, 60, freq, shape);
         } catch (Exception ex) {
           renderer.dispose();
           this.currentRenderer.set(null);
