@@ -1,11 +1,16 @@
 package com.igormaznitsa.gui;
 
 import com.igormaznitsa.dcf77soundwave.Dcf77Record;
+import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -14,10 +19,12 @@ import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
@@ -25,6 +32,8 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public final class AppFrame extends JFrame {
 
@@ -58,7 +67,7 @@ public final class AppFrame extends JFrame {
       this.appPanel.getTimePanel().setTime(ZonedDateTime.now(Dcf77Record.ZONE_CET));
     });
     this.timer.start();
-
+    this.appPanel.getTimePanel().setTime(ZonedDateTime.now(Dcf77Record.ZONE_CET));
   }
 
   public static OutputLineInfo findDefaultOutputMixer() {
@@ -142,12 +151,80 @@ public final class AppFrame extends JFrame {
     });
   }
 
+  private static final FileFilter FILE_FILTER_WAV =
+      new FileNameExtensionFilter("WAV file (*.wav)", "wav");
+  private File lastSavedFile;
+
+  private void saveAs() {
+    final JFileChooser fileChooser =
+        new JFileChooser(this.lastSavedFile == null ? null : this.lastSavedFile.getParentFile());
+    fileChooser.setAcceptAllFileFilterUsed(false);
+    fileChooser.addChoosableFileFilter(FILE_FILTER_WAV);
+    fileChooser.setDialogTitle("Render signal as a file");
+
+    if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+      File file = fileChooser.getSelectedFile();
+      if (!file.getName().toLowerCase(Locale.ENGLISH).endsWith(".wav")) {
+        file = new File(file.getParentFile(), file.getName() + ".wav");
+      }
+      this.lastSavedFile = file;
+      boolean enter = true;
+      int minutes = 15;
+      while (enter) {
+        final String entered =
+            JOptionPane.showInputDialog(this, "Number of rendered minutes (1..60)", 15);
+        if (entered == null) {
+          return;
+        } else {
+          try {
+            minutes = Integer.parseInt(entered.trim());
+            if (minutes <= 0 || minutes > 60) {
+              throw new NumberFormatException();
+            }
+            enter = false;
+          } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Value must be 1..60", "Wrong value",
+                JOptionPane.WARNING_MESSAGE);
+          }
+        }
+      }
+
+      final Dcf77SignalSoundRenderer renderer =
+          new Dcf77SignalSoundRenderer(120, this.appPanel.getSampleRate(), a -> null);
+      ZonedDateTime time = ZonedDateTime.now(Dcf77Record.ZONE_CET);
+      final List<Dcf77Record> recordList = new ArrayList<>();
+      for (int i = 0; i < minutes; i++) {
+        recordList.add(new Dcf77Record(time));
+      }
+      try {
+        final byte[] wavData = renderer.renderWav(false, recordList, this.appPanel.getCarrierFreq(),
+            Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
+            this.appPanel.getSignalShape());
+        Files.write(file.toPath(), wavData);
+        JOptionPane.showMessageDialog(this,
+            "Successfully saved as a WAV file, length " + wavData.length + " byte(s)", "Completed",
+            JOptionPane.INFORMATION_MESSAGE);
+      } catch (IOException ex) {
+        JOptionPane.showMessageDialog(this, "IO error: " + ex.getMessage(), "Error",
+            JOptionPane.ERROR_MESSAGE);
+      } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Unexpected error: " + ex.getMessage(), "Error",
+            JOptionPane.ERROR_MESSAGE);
+      }
+    }
+  }
+
   private JMenuBar makeMenuBar() {
     final JMenuBar menuBar = new JMenuBar();
     final JMenu menuFile = new JMenu("File");
+
     final JMenu menuSettings = new JMenu("Settings");
     final JMenu menuHelp = new JMenu("Help");
 
+    final JMenuItem menuSaveAs = new JMenuItem("Save as..");
+    menuSaveAs.addActionListener(a -> this.saveAs());
+
+    menuFile.add(menuSaveAs);
     menuFile.add(new JSeparator());
     final JMenuItem menuExit = new JMenuItem("Exit");
     menuExit.addActionListener(
@@ -168,12 +245,30 @@ public final class AppFrame extends JFrame {
       @Override
       public void menuSelected(MenuEvent e) {
         menuOutputDevices.removeAll();
+        final OutputLineInfo current = currentMixer.get();
+        final Mixer.Info currentMixer = current == null ? null : current.mixerInfo;
         getOutputLinesWithNames().forEach(x -> {
           final JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(x.mixerInfo.getName(),
-              x.mixerInfo.equals(currentMixer.get()));
+              x.mixerInfo.equals(currentMixer));
           menuOutputDevices.add(menuItem);
         });
+      }
 
+      @Override
+      public void menuDeselected(MenuEvent e) {
+
+      }
+
+      @Override
+      public void menuCanceled(MenuEvent e) {
+
+      }
+    });
+
+    menuSettings.addMenuListener(new MenuListener() {
+      @Override
+      public void menuSelected(MenuEvent e) {
+        menuOutputDevices.setEnabled(!appPanel.isInRendering());
       }
 
       @Override

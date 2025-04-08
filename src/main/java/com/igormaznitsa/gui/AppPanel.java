@@ -204,14 +204,7 @@ public class AppPanel extends JPanel {
       this.progressBarReplacement.setVisible(false);
       this.setEnableButtons(false);
 
-      final int sampleRate;
-      if (this.button44100.isSelected()) {
-        sampleRate = 44100;
-      } else if (this.button48000.isSelected()) {
-        sampleRate = 48000;
-      } else {
-        sampleRate = 96000;
-      }
+      final int sampleRate = this.getSampleRate();
 
       final Dcf77SignalSoundRenderer renderer = new Dcf77SignalSoundRenderer(70, sampleRate,
           audioFormat -> output.line);
@@ -221,23 +214,8 @@ public class AppPanel extends JPanel {
           renderer.initAudioLine();
           renderer.startAudio();
 
-          final Dcf77SignalSoundRenderer.SignalShape shape;
-          if (this.buttonSine.isSelected()) {
-            shape = Dcf77SignalSoundRenderer.SignalShape.SIN;
-          } else if (this.buttonSquare.isSelected()) {
-            shape = Dcf77SignalSoundRenderer.SignalShape.SQUARE;
-          } else {
-            shape = Dcf77SignalSoundRenderer.SignalShape.TRIANGLE;
-          }
-
-          final int freq;
-          if (this.button13700.isSelected()) {
-            freq = 13700;
-          } else if (this.button15500.isSelected()) {
-            freq = 15500;
-          } else {
-            freq = 17125;
-          }
+          final Dcf77SignalSoundRenderer.SignalShape shape = this.getSignalShape();
+          final int freq = this.getCarrierFreq();
 
           this.sendTimeData(renderer, 1, freq, shape);
         } catch (Exception ex) {
@@ -293,4 +271,37 @@ public class AppPanel extends JPanel {
     return this.timePanel;
   }
 
+  public boolean isInRendering() {
+    return this.buttonStartStop.isSelected();
+  }
+
+  public int getCarrierFreq() {
+    if (this.button13700.isSelected()) {
+      return 13700;
+    }
+    if (this.button15500.isSelected()) {
+      return 15500;
+    }
+    return 17125;
+  }
+
+  public Dcf77SignalSoundRenderer.SignalShape getSignalShape() {
+    if (this.buttonSine.isSelected()) {
+      return Dcf77SignalSoundRenderer.SignalShape.SIN;
+    }
+    if (this.buttonSquare.isSelected()) {
+      return Dcf77SignalSoundRenderer.SignalShape.SQUARE;
+    }
+    return Dcf77SignalSoundRenderer.SignalShape.TRIANGLE;
+  }
+
+  public int getSampleRate() {
+    if (this.button44100.isSelected()) {
+      return 44100;
+    }
+    if (this.button48000.isSelected()) {
+      return 48000;
+    }
+    return 96000;
+  }
 }
