@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-public class RadioSignalIndicator extends JPanel {
+public class SignalProgressBar extends JPanel {
   private static final Stroke STROKE = new BasicStroke(0.7f);
   private static final int CIRCLES = 5;
   private static final int SPEED = 2;
@@ -21,7 +21,7 @@ public class RadioSignalIndicator extends JPanel {
   private final AtomicReference<Timer> timerRef = new AtomicReference<>();
   private int offset = 0;
 
-  public RadioSignalIndicator() {
+  public SignalProgressBar() {
     super();
     this.setOpaque(false);
     this.setForeground(Color.ORANGE.darker().darker());
@@ -41,7 +41,7 @@ public class RadioSignalIndicator extends JPanel {
   private void startAnimation() {
     Timer timer = new Timer(TIMER_DELAY, a -> {
       offset += SPEED;
-      int spacing = RadioSignalIndicator.this.getHeight();
+      int spacing = SignalProgressBar.this.getHeight();
       if (offset >= spacing) {
         offset -= spacing;
       }

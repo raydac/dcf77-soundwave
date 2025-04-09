@@ -7,16 +7,20 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.function.Supplier;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 
 public class TimePanel extends javax.swing.JPanel {
 
   private final JLabel labelCest;
   private final JLabel labelTimeDate;
-  private ZonedDateTime time = ZonedDateTime.now();
+  private final Supplier<ZonedDateTime> timeSupplier;
+  private boolean showSecondsChange = true;
 
-  public TimePanel() {
+  public TimePanel(final Supplier<ZonedDateTime> timeSupplier) {
+    this.timeSupplier = timeSupplier == null ? ZonedDateTime::now : timeSupplier;
+
     GridBagConstraints gbc;
 
     labelTimeDate = new JLabel();
@@ -50,34 +54,47 @@ public class TimePanel extends javax.swing.JPanel {
     gbc.insets = new java.awt.Insets(16, 0, 0, 0);
     add(labelCest, gbc);
 
-    this.refreshTimeView();
+    this.refreshTime();
   }
 
-  public ZonedDateTime getTime() {
-    return this.time;
+  public boolean isShowSecondsChange() {
+    return this.showSecondsChange;
   }
 
-  public void setTime(ZonedDateTime time) {
-    this.time = Objects.requireNonNull(time);
-    this.refreshTimeView();
+  public void setShowSecondsChange(final boolean flag) {
+    this.showSecondsChange = flag;
   }
 
-  public void refreshTimeView() {
-    final int hours = this.time.getHour();
-    final int minute = this.time.getMinute();
-    final int year = this.time.getYear();
-    final String month = this.time.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
-    final int date = this.time.getDayOfMonth();
+  public void refreshTime() {
+    final Runnable runnable = () -> {
+      final ZonedDateTime time = this.timeSupplier.get();
 
-    final String sec = LocalTime.now().getSecond() % 2 == 0 ? ":" : " ";
-    final String timeText =
-        String.format("%02d%s%02d %04d-%s-%02d", hours, sec, minute, year, month, date);
+      final int hours = time.getHour();
+      final int minute = time.getMinute();
+      final int year = time.getYear();
+      final String month = time.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+      final int date = time.getDayOfMonth();
 
-    this.labelTimeDate.setText(timeText);
-    this.labelCest.setText(
-        this.time.getZone().getRules().isDaylightSavings(this.time.toInstant()) ? "CEST" : "CET");
+      final String sec;
+      if (this.showSecondsChange) {
+        sec = LocalTime.now().getSecond() % 2 == 0 ? ":" : " ";
+      } else {
+        sec = ":";
+      }
+      final String timeText =
+          String.format("%02d%s%02d %04d-%s-%02d", hours, sec, minute, year, month, date);
 
-    this.labelTimeDate.repaint();
-    this.labelCest.repaint();
+      this.labelTimeDate.setText(timeText);
+      this.labelCest.setText(
+          time.getZone().getRules().isDaylightSavings(time.toInstant()) ? "CEST" : "CET");
+
+      this.labelTimeDate.repaint();
+      this.labelCest.repaint();
+    };
+    if (SwingUtilities.isEventDispatchThread()) {
+      runnable.run();
+    } else {
+      SwingUtilities.invokeLater(runnable);
+    }
   }
 }

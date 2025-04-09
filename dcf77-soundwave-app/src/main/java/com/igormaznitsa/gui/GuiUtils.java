@@ -21,6 +21,7 @@ import org.apache.commons.lang3.SystemUtils;
 public final class GuiUtils {
   public static final Font FONT_DIGITAL;
   public static final Font FONT_ADSR;
+  public static final Font FONT_SOSA;
 
   static {
     try {
@@ -29,10 +30,14 @@ public final class GuiUtils {
       FONT_DIGITAL =
           Font.createFont(Font.TRUETYPE_FONT, requireNonNull(GuiUtils.class.getResourceAsStream(
               "/fonts/digital-7 (mono).ttf")));
+      FONT_SOSA =
+          Font.createFont(Font.TRUETYPE_FONT, requireNonNull(GuiUtils.class.getResourceAsStream(
+              "/fonts/SosaRegular-MJmx.ttf")));
       FONT_ADSR =
           Font.createFont(Font.TRUETYPE_FONT, requireNonNull(GuiUtils.class.getResourceAsStream(
               "/fonts/ADSR.TTF")));
       graphicsEnvironment.registerFont(FONT_DIGITAL);
+      graphicsEnvironment.registerFont(FONT_SOSA);
       graphicsEnvironment.registerFont(FONT_ADSR);
     } catch (Exception ex) {
       throw new Error("Can't init class for error", ex);

@@ -86,10 +86,11 @@ public final class AppFrame extends JFrame {
     });
 
     this.timer = new Timer(500, a -> {
-      this.appPanel.getTimePanel().setTime(ZonedDateTime.now(Dcf77Record.ZONE_CET));
+      this.appPanel.getTimePanel().refreshTime();
+      ;
     });
     this.timer.start();
-    this.appPanel.getTimePanel().setTime(ZonedDateTime.now(Dcf77Record.ZONE_CET));
+    this.appPanel.getTimePanel().refreshTime();
   }
 
   public static OutputLineInfo findDefaultOutputMixer() {
@@ -224,7 +225,7 @@ public final class AppFrame extends JFrame {
 
       final Dcf77SignalSoundRenderer renderer =
           new Dcf77SignalSoundRenderer(120, this.appPanel.getSampleRate(), a -> null);
-      ZonedDateTime time = ZonedDateTime.now(Dcf77Record.ZONE_CET);
+      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(Dcf77Record.ZONE_CET);
       final List<Dcf77Record> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
         recordList.add(new Dcf77Record(time));

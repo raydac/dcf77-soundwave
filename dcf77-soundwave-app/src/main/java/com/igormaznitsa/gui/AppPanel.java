@@ -2,15 +2,22 @@ package com.igormaznitsa.gui;
 
 import static java.util.Objects.requireNonNull;
 
+import com.github.lgooddatepicker.components.DatePickerSettings;
+import com.github.lgooddatepicker.components.DateTimePicker;
+import com.github.lgooddatepicker.components.TimePickerSettings;
 import com.igormaznitsa.dcf77soundwave.Dcf77Record;
 import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.swing.Box;
@@ -24,7 +31,7 @@ public class AppPanel extends JPanel {
 
   private final TimePanel timePanel;
   private final StartStopButton buttonStartStop;
-  private final RadioSignalIndicator progressBarTime;
+  private static final Color TIME_PANEL_NORMAL = Color.BLUE.darker().darker().darker();
   private final Component progressBarReplacement;
   private final ControlButton buttonSine;
   private final ControlButton buttonSquare;
@@ -35,15 +42,21 @@ public class AppPanel extends JPanel {
   private final ControlButton button13700;
   private final ControlButton button15500;
   private final ControlButton button17125;
+  private static final Color TIME_PANEL_FIXED = Color.RED.darker().darker().darker().darker();
 
   private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
+  private static final Supplier<ZonedDateTime> TIME_SUPPLIER_NOW = ZonedDateTime::now;
+  private final SignalProgressBar progressBarTime;
+  private final ControlButton buttonCustomTime;
+  private Supplier<ZonedDateTime> timeSupplier = TIME_SUPPLIER_NOW;
 
   public AppPanel(final Supplier<AppFrame.OutputLineInfo> mixerSupplier) {
     super(new BorderLayout(0, 0));
     this.mixerSupplier = requireNonNull(mixerSupplier);
-    this.timePanel = new TimePanel();
-    this.progressBarTime = new RadioSignalIndicator();
+    this.timePanel = new TimePanel(() -> this.timeSupplier.get());
+    this.timePanel.setBackground(TIME_PANEL_NORMAL);
+    this.progressBarTime = new SignalProgressBar();
 
     this.add(this.timePanel, BorderLayout.CENTER);
 
@@ -65,7 +78,7 @@ public class AppPanel extends JPanel {
 
     this.add(bottomPanel, BorderLayout.SOUTH);
 
-    final JPanel controlPanel = new JPanel(new GridLayout(3, 3));
+    final JPanel controlPanel = new JPanel(new GridLayout(4, 3));
 
     final Font defaultButtonFont = UIManager.getFont("Button.font");
 
@@ -81,6 +94,29 @@ public class AppPanel extends JPanel {
     this.buttonTriangle.setToolTipText("Triangular wave");
     this.buttonTriangle.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
+
+    this.buttonCustomTime = new ControlButton("[");
+    this.buttonCustomTime.setToolTipText("Render custom time");
+    this.buttonCustomTime.setFont(
+        GuiUtils.FONT_SOSA.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
+
+    this.buttonCustomTime.addActionListener(e -> {
+      if (this.buttonCustomTime.isSelected()) {
+        final ZonedDateTime selected = this.getSelectedTime();
+        if (selected == null) {
+          this.buttonCustomTime.setSelected(false);
+        } else {
+          this.timeSupplier = () -> selected;
+          this.timePanel.setShowSecondsChange(false);
+          this.timePanel.setBackground(TIME_PANEL_FIXED);
+        }
+      } else {
+        this.timeSupplier = TIME_SUPPLIER_NOW;
+        this.timePanel.setShowSecondsChange(true);
+        this.timePanel.setBackground(TIME_PANEL_NORMAL);
+      }
+      this.timePanel.refreshTime();
+    });
 
     final ButtonGroup buttonGroupSignal = new ButtonGroup();
     buttonGroupSignal.add(this.buttonSine);
@@ -126,6 +162,9 @@ public class AppPanel extends JPanel {
     controlPanel.add(this.button44100);
     controlPanel.add(this.button48000);
     controlPanel.add(this.button96000);
+    controlPanel.add(Box.createHorizontalGlue());
+    controlPanel.add(this.buttonCustomTime);
+    controlPanel.add(Box.createHorizontalGlue());
 
     this.add(controlPanel, BorderLayout.EAST);
 
@@ -149,6 +188,10 @@ public class AppPanel extends JPanel {
     });
   }
 
+  public ZonedDateTime getCurrentTime() {
+    return this.timeSupplier.get();
+  }
+
   public void dispose() {
     this.buttonStartStop.setSelected(false);
     this.stopRendering(null);
@@ -161,7 +204,8 @@ public class AppPanel extends JPanel {
       final Dcf77SignalSoundRenderer.SignalShape shape
   ) {
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime = ZonedDateTime.now(Dcf77Record.ZONE_CET);
+      ZonedDateTime zonedDateTime =
+          this.timeSupplier.get().withZoneSameInstant(Dcf77Record.ZONE_CET);
       boolean addedSuccessfully = true;
       for (int i = 0;
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&
@@ -200,6 +244,39 @@ public class AppPanel extends JPanel {
     }, "fill-time");
     thread.setDaemon(true);
     thread.start();
+  }
+
+  private ZonedDateTime getSelectedTime() {
+    final DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.US);
+    datePickerSettings.setVisibleTodayButton(true);
+    datePickerSettings.setVisibleNextMonthButton(true);
+    datePickerSettings.setVisiblePreviousMonthButton(true);
+    datePickerSettings.setAllowEmptyDates(false);
+    datePickerSettings.setEnableMonthMenu(true);
+    datePickerSettings.setEnableYearMenu(true);
+
+    final TimePickerSettings timePickerSettings = new TimePickerSettings(Locale.US);
+    timePickerSettings.setAllowEmptyTimes(false);
+    timePickerSettings.setDisplaySpinnerButtons(true);
+    timePickerSettings.setDisplayToggleTimeMenuButton(true);
+    timePickerSettings.setInitialTimeToNow();
+
+    DateTimePicker dateTimePicker = new DateTimePicker(datePickerSettings, timePickerSettings);
+
+    if (JOptionPane.showConfirmDialog(this, dateTimePicker, "Select date time",
+        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+      final LocalDate localDate = dateTimePicker.datePicker.getDate();
+      final LocalTime localTime = dateTimePicker.timePicker.getTime();
+      return ZonedDateTime.of(
+          localDate.getYear(),
+          localDate.getMonthValue(),
+          localDate.getDayOfMonth(),
+          localTime.getHour(),
+          localTime.getMinute(),
+          localTime.getSecond(),
+          0, Dcf77Record.ZONE_CET);
+    }
+    return null;
   }
 
   private void startRendering(final AppFrame.OutputLineInfo output) {
@@ -269,6 +346,7 @@ public class AppPanel extends JPanel {
     this.button13700.setEnabled(flag);
     this.button15500.setEnabled(flag);
     this.button17125.setEnabled(flag);
+    this.buttonCustomTime.setEnabled(flag);
   }
 
   public TimePanel getTimePanel() {
