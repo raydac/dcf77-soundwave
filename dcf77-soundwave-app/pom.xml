@@ -92,7 +92,7 @@
                                 <CFBundleURLTypes>
                                     <string>msa</string>
                                 </CFBundleURLTypes>
-                                <JVMVersion>17+</JVMVersion>
+                                <JVMVersion>11+</JVMVersion>
                                 <JVMMainClassName>DCF77Soundwave</JVMMainClassName>
                             </plist>
                             <dmg>
@@ -117,7 +117,7 @@
                         <configuration>
                             <headerType>gui</headerType>
                             <outfile>${project.build.directory}/${app.name}.exe</outfile>
-                            <downloadUrl>https://bell-sw.com/pages/downloads/#/java-19-current</downloadUrl>
+                            <downloadUrl>https://bell-sw.com/pages/downloads/#jdk-21-lts</downloadUrl>
                             <classPath>
                                 <mainClass>DCF77Soundwave</mainClass>
                                 <preCp>anything</preCp>
@@ -126,7 +126,7 @@
                                 ${basedir}/logo.ico
                             </icon>
                             <singleInstance>
-                                <mutexName>sciaretoeditor</mutexName>
+                                <mutexName>dcf77soundwave</mutexName>
                             </singleInstance>
                             <versionInfo>
                                 <fileVersion>1.0.0.0</fileVersion>
@@ -151,8 +151,10 @@
                                 <configuration>
                                     <outfile>${project.build.directory}${file.separator}${app.name}.exe</outfile>
                                     <jre>
-                                        <minVersion>17</minVersion>
-                                        <path>%VAR%</path>
+                                        <minVersion>11</minVersion>
+                                        <jdkPreference>preferJdk</jdkPreference>
+                                        <runtimeBits>64</runtimeBits>
+                                        <bundledJre64Bit>false</bundledJre64Bit>
                                     </jre>
                                 </configuration>
                             </execution>
@@ -678,6 +680,8 @@
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/MANIFEST.SF</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
