@@ -3,6 +3,7 @@ package com.igormaznitsa.gui;
 import com.igormaznitsa.dcf77soundwave.Dcf77Record;
 import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
 import java.awt.BorderLayout;
+import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -51,10 +52,20 @@ public final class AppFrame extends JFrame {
   private final AppPanel appPanel;
   private final AtomicReference<OutputLineInfo> currentMixer = new AtomicReference<>();
 
+  private static List<Image> loadAppIcons() {
+    final List<Image> result = new ArrayList<>();
+    result.add(GuiUtils.loadIcon("applogo16x16.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo32x32.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo64x64.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo128x128.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo256x256.png").getImage());
+    return result;
+  }
+
   public AppFrame() {
     super("Central European Time DCF77 sound generator");
 
-    this.setIconImage(GuiUtils.loadIcon("appicon.png").getImage());
+    this.setIconImages(loadAppIcons());
 
     this.currentMixer.set(findDefaultOutputMixer());
     this.setJMenuBar(this.makeMenuBar());
