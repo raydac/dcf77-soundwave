@@ -7,49 +7,59 @@
 
     <artifactId>dcf77-soundwave</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
+
+    <description>Desktop application to emulate Central European Time DCF77 signal through sound channel.</description>
+
+    <developers>
+        <developer>
+            <id>raydac</id>
+            <name>Igor Maznitsa</name>
+            <email>rrg4400@gmail.com</email>
+            <url>https://www.igormaznitsa.com</url>
+            <timezone>+2</timezone>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <url>http://www.sciareto.org</url>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/raydac/dcf77-soundwave/issues</url>
+    </issueManagement>
+
+    <scm>
+        <url>https://github.com/raydac/dcf77-soundwave</url>
+        <connection>scm:git:git://github.com/raydac/dcf77-soundwave.git</connection>
+        <developerConnection>scm:git:git@github.com:raydac/dcf77-soundwave.git</developerConnection>
+    </scm>
+
+    <organization>
+        <name>Igor Maznitsa</name>
+        <url>https://www.igormaznitsa.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
-        <exec.mainClass>com.igormaznitsa.dcf77station.Dcf77Station</exec.mainClass>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.18.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.17.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.12.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>5.12.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.12.1</version>
-            <scope>test</scope>
-        </dependency>
+    <modules>
+        <module>dcf77-soundwave-app</module>
+        <module>dcf77-soundwave-win-launcher</module>
+    </modules>
 
-        <dependency>
-            <groupId>com.igormaznitsa</groupId>
-            <artifactId>jbbp</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-    </dependencies>
 
 </project>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=DCF77Soundwave
+Comment=DCF77Soundwave generator
+GenericName=DCF77SOundwave
+Terminal=false
+Type=Application
+Icon=icon
+Categories=Application;
+Keywords=dcf77;sound;generator;
+StartupWMClass=DCF77Soundwave
+StartupNotify=true

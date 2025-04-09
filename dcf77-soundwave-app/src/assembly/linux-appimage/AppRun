@@ -1,0 +1,4 @@
+#!/bin/sh
+JAVA_FLAGS="-server -Xverify:none -Xms512m -Xmx1024m --add-opens=java.base/java.util=ALL-UNNAMED"
+JAVA_RUN=$APPDIR/jre/bin/java
+$JAVA_RUN $JAVA_FLAGS $JAVA_EXTRA_GFX_FLAGS -jar $APPDIR/dcf77soundwave-*.jar $@

@@ -1,4 +1,6 @@
 *.iml
+bin/
+.build/
 .idea/
 target/
 pom.xml.tag
