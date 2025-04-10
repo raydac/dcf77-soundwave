@@ -17,7 +17,24 @@ public class AboutPanel extends JPanel {
         new JLabel("<html><h2>CET DCF77 sound wave</h2></html>", JLabel.CENTER);
     final JLabel infoLabel =
         new JLabel(
-            "<html>Version 1.0.0<hr>The application simulates a Central European Time station<br>using the DCF77 protocol over the audio spectrum.<hr>©2025 Igor Maznitsa<br><a href=\"https://github.com/raydac/dcf77-soundwave\">https://github.com/raydac/dcf77-soundwave</a></html>",
+            "<html>Version 1.0.0" +
+                "<hr>" +
+                "The application simulates a Central European Time station using the DCF77 protocol over the audio spectrum." +
+                "<hr>©2025 Igor Maznitsa<br>" +
+                "Apache License 2.0<br>" +
+                "<a href=\"https://github.com/raydac/dcf77-soundwave\">https://github.com/raydac/dcf77-soundwave</a>" +
+                "<hr>" +
+                "<p><b>Third-party components and references to them</b>" +
+                "<table border=1>" +
+                "<li>" +
+                "<tr><td><b>LGoodDatePicker</b></td><td>MIT license</td><td>https://github.com/LGoodDatePicker/LGoodDatePicker</td></tr>" +
+                "<tr><td><b>Free FatCow-Farm Fresh Icons</b></td><td>CCA 3.0 license</td><td>http://www.fatcow.com/free-icons</td></tr>" +
+                "<tr><td><b>Font SOSA</b></td><td>Freeware license</td><td>https://www.fontspace.com/sosa-font-f14893</td></tr>" +
+                "<tr><td><b>Font ADSR</b></td><td>Unknown license</td><td>https://discourse.zynthian.org/t/a-synth-symbol-ttf-font/4324</td></tr>" +
+                "<tr><td><b>Font Digital 7</b></td><td>Freeware license</td><td>http://www.styleseven.com</td></tr>" +
+                "</table>" +
+                "</p" +
+                "</html>",
             JLabel.CENTER);
     infoLabel.addMouseListener(new MouseAdapter() {
       @Override

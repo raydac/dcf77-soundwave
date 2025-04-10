@@ -6,7 +6,7 @@
     <groupId>com.igormaznitsa</groupId>
 
     <artifactId>dcf77-soundwave</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <description>Desktop application to emulate Central European Time DCF77 signal through sound channel.</description>
@@ -24,7 +24,7 @@
         </developer>
     </developers>
 
-    <url>http://www.sciareto.org</url>
+    <url>https://github.com/raydac/dcf77-soundwave</url>
 
     <issueManagement>
         <system>GitHub Issues</system>

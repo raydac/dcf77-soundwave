@@ -19,7 +19,7 @@
     "FileSubType": "00"
   },
   "StringFileInfo": {
-    "Comments": "Free OSS DCF77 Station sound generator",
+    "Comments": "Free DCF77 Station sound generator",
     "CompanyName": "Igor Maznitsa",
     "FileDescription": "DCF77Soundwave application",
     "FileVersion": "v1.0.9.0",
