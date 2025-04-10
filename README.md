@@ -45,10 +45,10 @@ separately if you don’t want to.
 It runs as a standard desktop GUI application, offering a user-friendly interface where you can select key parameters
 for signal generation. These include:
 
-- Signal waveform – This affects the harmonic profile and can influence how well your clock picks up the generated
-  signal.
-- Carrier frequency – The base frequency used for the audio signal, ideally a multiple or harmonic of 77.5 kHz.
-- Sample rate – The audio output's sampling frequency, which impacts the fidelity and quality of the harmonics.
+- __Signal waveform__ – This affects the harmonic profile and can influence how well your clock picks up the generated
+  signal. 
+- __Carrier frequency__ – The base frequency used for the audio signal, ideally a multiple or harmonic of 77.5 kHz.
+- __Sample rate__ – The audio output's sampling frequency, which impacts the fidelity and quality of the harmonics.
 
 ![GUI elements](assets/gui_elements.png)
 
