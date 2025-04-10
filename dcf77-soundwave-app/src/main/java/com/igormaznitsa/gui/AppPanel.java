@@ -46,10 +46,11 @@ public class AppPanel extends JPanel {
 
   private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
-  private static final Supplier<ZonedDateTime> TIME_SUPPLIER_NOW = ZonedDateTime::now;
+  private static final Supplier<ZonedDateTime> TIME_SUPPLIER_CET_NOW =
+      () -> ZonedDateTime.now(Dcf77Record.ZONE_CET);
   private final SignalProgressBar progressBarTime;
   private final ControlButton buttonCustomTime;
-  private Supplier<ZonedDateTime> timeSupplier = TIME_SUPPLIER_NOW;
+  private Supplier<ZonedDateTime> timeSupplier = TIME_SUPPLIER_CET_NOW;
 
   public AppPanel(final Supplier<AppFrame.OutputLineInfo> mixerSupplier) {
     super(new BorderLayout(0, 0));
@@ -111,7 +112,7 @@ public class AppPanel extends JPanel {
           this.timePanel.setBackground(TIME_PANEL_FIXED);
         }
       } else {
-        this.timeSupplier = TIME_SUPPLIER_NOW;
+        this.timeSupplier = TIME_SUPPLIER_CET_NOW;
         this.timePanel.setShowSecondsChange(true);
         this.timePanel.setBackground(TIME_PANEL_NORMAL);
       }
