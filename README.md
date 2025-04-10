@@ -9,7 +9,7 @@
 
 If you've ever owned a radio-controlled wrist watch, you probably know how convenient it is to have a device that always shows
 the exact time without manual adjustment. These watches synchronize themselves with atomic time broadcasts, one of the
-most well-known of which is DCF77, a longwave time signal transmitted from Germany on a frequency of 77.5 kHz.
+most well-known of which is [DCF77](https://en.wikipedia.org/wiki/DCF77), a longwave time signal transmitted from Germany on a frequency of 77.5 kHz.
 
 Unfortunately, for those of us living in places like Estonia, the DCF77 signal tends to be very weak or unreliable due
 to distance and geographical interference. That was exactly my experience after getting a radio-controlled clock. I
@@ -21,17 +21,17 @@ I looked into existing mobile apps that claim to generate DCF77-compatible signa
 acoustically. While a few options were available, I found them limited in features or simply not very reliable in
 practice. That’s when I decided to build my own solution.
 
-This project is a Java-based desktop application that can generate a time signal similar to DCF77, intended to be
+This project is a Java-based desktop application that can generate a time signal similar to [DCF77](https://en.wikipedia.org/wiki/DCF77), intended to be
 interpreted by radio-controlled clocks. Since 77.5 kHz is well beyond the capabilities of consumer-grade sound cards,
 the application uses an alternative approach: it generates an audio signal at a multiple of the original frequency,
-leveraging harmonics to simulate the real DCF77 broadcast. This way, the wrist watch's receiver may still lock on to the
+leveraging harmonics to simulate the real [DCF77](https://en.wikipedia.org/wiki/DCF77) broadcast. This way, the wrist watch's receiver may still lock on to the
 signal if placed near the audio source (like headphones or a speaker).
 
 ![Headphones as an antenna](assets/dcf77_application_in_action.jpg)
 
 The result is a handy desktop free utility that lets you synchronize your radio-controlled wrist watch without needing a
 strong
-over-the-air signal—particularly useful if you live in a region with poor DCF77 reception or want to test clock
+over-the-air signal—particularly useful if you live in a region with poor [DCF77](https://en.wikipedia.org/wiki/DCF77) reception or want to test clock
 synchronization indoors.
 
 ## Application
