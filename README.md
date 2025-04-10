@@ -11,7 +11,7 @@ If you've ever owned a radio-controlled wrist watch, you probably know how conve
 the exact time without manual adjustment. These watches synchronize themselves with atomic time broadcasts, one of the
 most well-known of which is [DCF77](https://en.wikipedia.org/wiki/DCF77), a longwave time signal transmitted from Germany on a frequency of 77.5 kHz.
 
-Unfortunately, for those of us living in places like Estonia, the DCF77 signal tends to be very weak or unreliable due
+Unfortunately, for those of us living in places like [Estonia](https://en.wikipedia.org/wiki/Estonia), the [DCF77](https://en.wikipedia.org/wiki/DCF77) signal tends to be very weak or unreliable due
 to distance and geographical interference. That was exactly my experience after getting a radio-controlled clock. I
 quickly realized that it wasn’t going to sync reliably with the official signal.
 
@@ -38,7 +38,7 @@ synchronization indoors.
 
 ![Application look](assets/applook.png)
 
-The application is written in Java and requires Java 11 or later to be installed on your computer. For convenience,
+The application is written in [Java](https://en.wikipedia.org/wiki/Java_(programming_language)) and requires Java 11 or later to be installed on your computer. For convenience,
 there are also build versions that come bundled with a compatible Java runtime, so you don't have to install Java
 separately if you don’t want to.
 
