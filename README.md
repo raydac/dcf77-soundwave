@@ -50,7 +50,7 @@ for signal generation. These include:
 - Carrier frequency – The base frequency used for the audio signal, ideally a multiple or harmonic of 77.5 kHz.
 - Sample rate – The audio output's sampling frequency, which impacts the fidelity and quality of the harmonics.
 
-![GUI elements](assets/gui_elements.png)
+![GUI elements](assets/gui_elements.svg)
 
 The application reads the current system time, so it’s important to make sure your computer’s clock is accurate. For
 best results, synchronize your PC clock with an NTP server before starting.
