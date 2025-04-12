@@ -1,0 +1,5 @@
+1.0.1 (SNAPSHOT)
+ - added set of NTP servers as time source
+
+1.0.0 (10-apr-2025)
+ - initial version

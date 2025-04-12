@@ -38,9 +38,24 @@ synchronization indoors.
 
 ![Application look](assets/applook.png)
 
-The application is written in [Java](https://en.wikipedia.org/wiki/Java_(programming_language)) and requires Java 11 or later to be installed on your computer. For convenience,
+The application is written in [Java](https://en.wikipedia.org/wiki/Java_(programming_language)) and
+requires [Java 11](https://bell-sw.com/pages/downloads/#jdk-21-lts) or later to be installed on your computer. For
+convenience,
 there are also build versions that come bundled with a compatible Java runtime, so you don't have to install Java
 separately if you don’t want to.
+
+| OS                                           | Download link                                                                                                                                               | 
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![Windows](assets/icons/win64x64.png)        | __[Archive with JRE for Windows amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0-windows-jdk-amd64.zip)__ |
+| ![Windows](assets/icons/win64x64.png)        | __[Archive without JRE for Windows](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0.exe)__                      |
+| ![OSX](assets/icons/macos64x64.png)          | __[Archive with JRE for MacOS amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0-macos-jdk-amd64.zip)__     |
+| ![OSX Arm64](assets/icons/macosarm64x64.png) | __[Archive with JRE for MacOS arm64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0-macos-jdk-aarch64.zip)__   |
+| ![OSX](assets/icons/macos64x64.png)          | __[DMG package for MacOS (no JRE)](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app_1.0.0.dmg)__                       |
+| ![Linux](assets/icons/linux64x64.png)        | __[Archive with JRE for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0-linux-jdk-amd64.tar.gz)__  |
+| ![Linux](assets/icons/appimage64x64.png)     | __[AppImage for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0-x86_64.AppImage)__                 |
+| ![Java](assets/icons/java64x64.png)          | __[Cross-platform JAR file](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.0/dcf77-soundwave-app-1.0.0.jar)__                              | 
+
+__[Full set of latest pre-built applications](https://github.com/raydac/dcf77-soundwave/releases/latest)__
 
 It runs as a standard desktop GUI application, offering a user-friendly interface where you can select key parameters
 for signal generation. These include:
