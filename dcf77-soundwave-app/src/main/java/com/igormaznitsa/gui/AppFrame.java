@@ -76,7 +76,7 @@ public final class AppFrame extends JFrame {
       NtpTimeSource.timeSourceOf("Norway", "no.pool.ntp.org"),
       NtpTimeSource.timeSourceOf("Portugal", "pt.pool.ntp.org"),
       NtpTimeSource.timeSourceOf("Sweden", "se.pool.ntp.org"),
-      NtpTimeSource.timeSourceOf("Russia", "0.ru.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Russia", "ru.pool.ntp.org"),
       NtpTimeSource.timeSourceSectionOf("North American Pool Zones"),
       NtpTimeSource.timeSourceOf("USA", "us.pool.ntp.org"),
       NtpTimeSource.timeSourceOf("Canada", "ca.pool.ntp.org"),
