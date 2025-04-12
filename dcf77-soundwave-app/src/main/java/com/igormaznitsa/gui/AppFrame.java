@@ -380,6 +380,7 @@ public final class AppFrame extends JFrame {
                   final NTPUDPClient ntpudpClient = this.currentNtpUDpClient.getAndSet(null);
                   if (ntpudpClient != null) {
                     try {
+                      System.out.println("Closing NTP client");
                       ntpudpClient.close();
                     } catch (Exception ignore) {
                     }
