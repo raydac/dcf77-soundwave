@@ -6,6 +6,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -44,6 +46,7 @@ public class Dcf77SignalSoundRenderer {
   private final SourceDataLineSupplier sourceDataLineSupplier;
   private final AtomicReference<SourceDataLine> sourceDataLine = new AtomicReference<>();
   private final List<Dcf77SignalSoundRendererListener> listeners = new CopyOnWriteArrayList<>();
+  private final Supplier<Instant> nowInstantSupplier;
 
   /**
    * Capacity of internal queue for DCF77 records.
@@ -55,7 +58,9 @@ public class Dcf77SignalSoundRenderer {
   public Dcf77SignalSoundRenderer(
       final int queueCapacity,
       final int sampleRate,
+      final Supplier<Instant> instantSupplier,
       final SourceDataLineSupplier sourceDataLineSupplier) {
+    this.nowInstantSupplier = requireNonNull(instantSupplier);
     this.renderQueue = new ArrayBlockingQueue<>(queueCapacity);
     this.sampleRate = sampleRate;
     this.samplesPerSet = this.sampleRate / 5;
@@ -169,8 +174,9 @@ public class Dcf77SignalSoundRenderer {
       final double amplitudeDeviation) {
     long data = record.getBitString(false);
 
-    final LocalTime now = LocalTime.now();
-    final int second = secondsAwareness ? now.getSecond() : 0;
+    final Instant now = this.nowInstantSupplier.get();
+    final int second =
+        secondsAwareness ? LocalTime.ofInstant(now, Dcf77Record.ZONE_CET).getSecond() : 0;
     final int totalSamples = this.sampleRate * (60 - second);
     final byte[] wavBuffer = new byte[totalSamples * SAMPLE_BYTES];
 

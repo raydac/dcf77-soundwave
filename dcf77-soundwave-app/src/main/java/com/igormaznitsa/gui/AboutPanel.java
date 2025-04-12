@@ -17,7 +17,7 @@ public class AboutPanel extends JPanel {
         new JLabel("<html><h2>CET DCF77 sound wave</h2></html>", JLabel.CENTER);
     final JLabel infoLabel =
         new JLabel(
-            "<html>Version 1.0.0" +
+            "<html>Version 1.0.1" +
                 "<hr>" +
                 "The application simulates a Central European Time station using the DCF77 protocol over the audio spectrum." +
                 "<hr>©2025 Igor Maznitsa<br>" +

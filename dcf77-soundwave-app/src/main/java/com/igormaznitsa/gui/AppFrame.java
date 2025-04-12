@@ -9,13 +9,21 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -24,9 +32,11 @@ import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import javax.swing.ButtonGroup;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -45,31 +55,68 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
 
 public final class AppFrame extends JFrame {
 
+  private static final String TITLE = "DCF77 sound generator";
+
+  private static final List<NtpTimeSource> NTP_TIME_SOURCES = List.of(
+      NtpTimeSource.timeSourceOf("Localhost timer", "localhost"),
+      NtpTimeSource.timeSourceSectionOf("European Pool Zones"),
+      NtpTimeSource.timeSourceOf("Estonia", "ee.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Ukraine", "ua.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("UK", "uk.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Germany", "de.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("France", "fr.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Spain", "es.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Italy", "it.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Netherlands", "nl.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Norway", "no.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Portugal", "pt.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Sweden", "se.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Russia", "0.ru.pool.ntp.org"),
+      NtpTimeSource.timeSourceSectionOf("North American Pool Zones"),
+      NtpTimeSource.timeSourceOf("USA", "us.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Canada", "ca.pool.ntp.org"),
+      NtpTimeSource.timeSourceSectionOf("Asian Pool Zones"),
+      NtpTimeSource.timeSourceOf("United Arab Emirates", "ae.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("China", "cn.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("India", "in.pool.ntp.org"),
+      NtpTimeSource.timeSourceOf("Saudi Arabia", "sa.pool.ntp.org")
+  );
+
+  private static final FileFilter FILE_FILTER_WAV =
+      new FileNameExtensionFilter("WAV file (*.wav)", "wav");
+  private static final int NTP_REFRESH_DELAY_MS = 333;
+  private static final int NTP_TIMEOUT_MS = 600;
+  private static final int MAX_NTP_ERROR_COUNTER = 5;
   private final Timer timer;
   private final AppPanel appPanel;
   private final AtomicReference<OutputLineInfo> currentMixer = new AtomicReference<>();
-
-  private static List<Image> loadAppIcons() {
-    final List<Image> result = new ArrayList<>();
-    result.add(GuiUtils.loadIcon("applogo16x16.png").getImage());
-    result.add(GuiUtils.loadIcon("applogo32x32.png").getImage());
-    result.add(GuiUtils.loadIcon("applogo64x64.png").getImage());
-    result.add(GuiUtils.loadIcon("applogo128x128.png").getImage());
-    result.add(GuiUtils.loadIcon("applogo256x256.png").getImage());
-    return result;
-  }
+  private final AtomicReference<Instant> currentTime = new AtomicReference<>(Instant.now());
+  private final AtomicReference<NTPUDPClient> currentNtpUDpClient = new AtomicReference<>();
+  private final ScheduledExecutorService timerNtpRefresh = new ScheduledThreadPoolExecutor(1,
+      r -> {
+        final Thread thread = new Thread(r, "timer-ntp-refresh");
+        thread.setDaemon(true);
+        return thread;
+      }, (r, executor) -> System.err.println("Detected rejected ntp task"));
+  private final AtomicReference<ScheduledFuture<?>> ntpScheduledFuture = new AtomicReference<>();
+  private File lastSavedFile;
 
   public AppFrame() {
-    super("Central European Time DCF77 sound generator");
+    super(TITLE);
 
     this.setIconImages(loadAppIcons());
 
     this.currentMixer.set(findDefaultOutputMixer());
     this.setJMenuBar(this.makeMenuBar());
-    this.appPanel = new AppPanel(this.currentMixer::get);
+    this.appPanel = new AppPanel(
+        this.currentMixer::get,
+        () -> ZonedDateTime.ofInstant(this.currentTime.get(), Dcf77Record.ZONE_CET)
+    );
 
     this.setContentPane(this.appPanel);
     this.pack();
@@ -79,18 +126,38 @@ public final class AppFrame extends JFrame {
     this.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
+        final NTPUDPClient ntpudpClient = AppFrame.this.currentNtpUDpClient.getAndSet(null);
+        if (ntpudpClient != null) {
+          try {
+            System.out.println("Closing NTP client");
+            ntpudpClient.close();
+          } catch (Exception ignore) {
+          }
+        }
+        AppFrame.this.timerNtpRefresh.shutdownNow();
+        var scheduledFuture = AppFrame.this.ntpScheduledFuture.getAndSet(null);
+        if (scheduledFuture != null) {
+          scheduledFuture.cancel(true);
+        }
         AppFrame.this.appPanel.dispose();
         AppFrame.this.timer.stop();
         AppFrame.this.dispose();
       }
     });
 
-    this.timer = new Timer(500, a -> {
-      this.appPanel.getTimePanel().refreshTime();
-      ;
-    });
+    this.timer = new Timer(NTP_REFRESH_DELAY_MS, a -> this.appPanel.getTimePanel().refreshTime());
     this.timer.start();
     this.appPanel.getTimePanel().refreshTime();
+  }
+
+  private static List<Image> loadAppIcons() {
+    final List<Image> result = new ArrayList<>();
+    result.add(GuiUtils.loadIcon("applogo16x16.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo32x32.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo64x64.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo128x128.png").getImage());
+    result.add(GuiUtils.loadIcon("applogo256x256.png").getImage());
+    return result;
   }
 
   public static OutputLineInfo findDefaultOutputMixer() {
@@ -185,10 +252,6 @@ public final class AppFrame extends JFrame {
     }
   }
 
-  private static final FileFilter FILE_FILTER_WAV =
-      new FileNameExtensionFilter("WAV file (*.wav)", "wav");
-  private File lastSavedFile;
-
   private void saveAs() {
     final JFileChooser fileChooser =
         new JFileChooser(this.lastSavedFile == null ? null : this.lastSavedFile.getParentFile());
@@ -224,7 +287,8 @@ public final class AppFrame extends JFrame {
       }
 
       final Dcf77SignalSoundRenderer renderer =
-          new Dcf77SignalSoundRenderer(120, this.appPanel.getSampleRate(), a -> null);
+          new Dcf77SignalSoundRenderer(120, this.appPanel.getSampleRate(), this.currentTime::get,
+              a -> null);
       ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(Dcf77Record.ZONE_CET);
       final List<Dcf77Record> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
@@ -286,6 +350,130 @@ public final class AppFrame extends JFrame {
     menuHelp.add(menuDoDonate);
     menuHelp.add(menuShowAbout);
 
+    final ButtonGroup buttonGroupMenuSourceNtpServer = new ButtonGroup();
+    final JMenu menuSourceNtpServer = new JMenu("Time sources");
+    menuSourceNtpServer.setIcon(GuiUtils.loadIcon("time_go.png"));
+
+    final AtomicReference<JRadioButtonMenuItem> localHostButton = new AtomicReference<>();
+    final AtomicInteger ntpErrorCounter = new AtomicInteger(MAX_NTP_ERROR_COUNTER);
+
+    for (final NtpTimeSource timeSource : NTP_TIME_SOURCES) {
+      if (timeSource instanceof NtpTimeSourceSectionHeader) {
+        menuSourceNtpServer.add(new JLabel("<html><b>" + timeSource.name + "</b></html>"));
+        menuSourceNtpServer.add(new JSeparator());
+      } else {
+        final JRadioButtonMenuItem radioButtonMenuItem = new JRadioButtonMenuItem(timeSource.name);
+        buttonGroupMenuSourceNtpServer.add(radioButtonMenuItem);
+        menuSourceNtpServer.add(radioButtonMenuItem);
+
+        if ("localhost".equalsIgnoreCase(timeSource.address)) {
+          localHostButton.set(radioButtonMenuItem);
+          radioButtonMenuItem.addActionListener(l -> {
+            AppFrame.this.setTitle(TITLE);
+            System.out.println("Selected time source: " + timeSource);
+            ntpErrorCounter.set(MAX_NTP_ERROR_COUNTER);
+            var future = this.ntpScheduledFuture.getAndSet(null);
+            if (future != null) {
+              future.cancel(true);
+            }
+            final ScheduledFuture<?> newFuture = this.timerNtpRefresh.scheduleAtFixedRate(() -> {
+                  final NTPUDPClient ntpudpClient = this.currentNtpUDpClient.getAndSet(null);
+                  if (ntpudpClient != null) {
+                    try {
+                      ntpudpClient.close();
+                    } catch (Exception ignore) {
+                    }
+                  }
+                  this.currentTime.set(Instant.now());
+                },
+                0L, NTP_REFRESH_DELAY_MS, TimeUnit.MILLISECONDS);
+            if (!this.ntpScheduledFuture.compareAndSet(null, newFuture)) {
+              System.err.println("Can't set new future, unexpected racing!");
+              newFuture.cancel(true);
+            }
+          });
+        } else {
+          try {
+            final InetAddress inetAddress = InetAddress.getByName(timeSource.address);
+            radioButtonMenuItem.setToolTipText(timeSource.address);
+            radioButtonMenuItem.addActionListener(l -> {
+              AppFrame.this.setTitle(TITLE + " (NTP:" + timeSource.address + ')');
+              System.out.println("Selected time source: " + timeSource);
+
+              var future = this.ntpScheduledFuture.getAndSet(null);
+              if (future != null) {
+                future.cancel(true);
+              }
+              final ScheduledFuture<?> newFuture =
+                  this.timerNtpRefresh.scheduleAtFixedRate(() -> {
+                    long time;
+                    NTPUDPClient ntpudpClient = this.currentNtpUDpClient.get();
+                    if (ntpudpClient == null) {
+                      System.out.println("Creating NTP client");
+                      ntpudpClient = new NTPUDPClient();
+                      ntpudpClient.setDefaultTimeout(Duration.ofMillis(NTP_TIMEOUT_MS));
+                      try {
+                        ntpudpClient.open();
+                        this.currentNtpUDpClient.set(ntpudpClient);
+                        System.out.println("NTP client successfully created and opened");
+                      } catch (Exception ex) {
+                        ntpudpClient = null;
+                      }
+                    }
+
+                    if (ntpudpClient == null) {
+                      var thisFuture = this.ntpScheduledFuture.get();
+                      thisFuture.cancel(false);
+                      SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(AppFrame.this,
+                            "Can't initialize NTP client", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        final JRadioButtonMenuItem localhostButton = localHostButton.get();
+                        if (localhostButton != null) {
+                          localhostButton.doClick();
+                        }
+                      });
+                      time = System.currentTimeMillis();
+                    } else {
+                      try {
+                        final TimeInfo info = ntpudpClient.getTime(inetAddress);
+                        time = info.getMessage().getTransmitTimeStamp().getTime();
+                        ntpErrorCounter.set(MAX_NTP_ERROR_COUNTER);
+                      } catch (Exception ex) {
+                        if (ntpErrorCounter.decrementAndGet() <= 0) {
+                          var thisFuture = this.ntpScheduledFuture.get();
+                          thisFuture.cancel(false);
+                          SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(AppFrame.this,
+                                "Can't get NTP packets from " + timeSource.address + ": " +
+                                    ex.getMessage(), "Can't get NTP packets",
+                                JOptionPane.WARNING_MESSAGE);
+                            final JRadioButtonMenuItem localhostButton = localHostButton.get();
+                            if (localhostButton != null) {
+                              localhostButton.doClick();
+                            }
+                          });
+                        }
+                        time = System.currentTimeMillis();
+                      }
+                    }
+                    this.currentTime.set(Instant.ofEpochMilli(time));
+                  }, 0L, NTP_REFRESH_DELAY_MS, TimeUnit.MILLISECONDS);
+
+              if (!this.ntpScheduledFuture.compareAndSet(null, newFuture)) {
+                System.err.println("Can't set new future, unexpected racing!");
+                newFuture.cancel(true);
+              }
+
+            });
+          } catch (Exception ex) {
+            radioButtonMenuItem.setEnabled(false);
+          }
+        }
+      }
+    }
+    menuSettings.add(menuSourceNtpServer);
+
     final JMenu menuOutputDevices = new JMenu("Output device");
     menuOutputDevices.setIcon(GuiUtils.loadIcon("sound.png"));
     menuSettings.add(menuOutputDevices);
@@ -334,6 +522,11 @@ public final class AppFrame extends JFrame {
     menuBar.add(menuSettings);
     menuBar.add(menuHelp);
 
+    final JRadioButtonMenuItem localHostButtonMenuItem = localHostButton.get();
+    if (localHostButtonMenuItem != null) {
+      localHostButtonMenuItem.doClick();
+    }
+
     return menuBar;
   }
 
@@ -355,6 +548,38 @@ public final class AppFrame extends JFrame {
 
   private void showAbout() {
     JOptionPane.showMessageDialog(this, new AboutPanel(), "About", JOptionPane.PLAIN_MESSAGE);
+  }
+
+  private static class NtpTimeSourceSectionHeader extends NtpTimeSource {
+    public NtpTimeSourceSectionHeader(final String name) {
+      super(name, null);
+    }
+  }
+
+  private static class NtpTimeSource {
+    private final String name;
+    private final String address;
+
+    NtpTimeSource(final String name, final String address) {
+      this.name = name;
+      this.address = address;
+    }
+
+    static NtpTimeSourceSectionHeader timeSourceSectionOf(final String name) {
+      return new NtpTimeSourceSectionHeader(name);
+    }
+
+    static NtpTimeSource timeSourceOf(final String name, final String address) {
+      return new NtpTimeSource(name, address);
+    }
+
+    @Override
+    public String toString() {
+      return "NtpTimeSource{" +
+          "name='" + this.name + '\'' +
+          ", address='" + this.address + '\'' +
+          '}';
+    }
   }
 
   public static class OutputLineInfo {

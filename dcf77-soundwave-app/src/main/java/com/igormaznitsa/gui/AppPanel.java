@@ -46,16 +46,20 @@ public class AppPanel extends JPanel {
 
   private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
-  private static final Supplier<ZonedDateTime> TIME_SUPPLIER_CET_NOW =
-      () -> ZonedDateTime.now(Dcf77Record.ZONE_CET);
   private final SignalProgressBar progressBarTime;
   private final ControlButton buttonCustomTime;
-  private Supplier<ZonedDateTime> timeSupplier = TIME_SUPPLIER_CET_NOW;
+  private Supplier<ZonedDateTime> baseTimeSupplier;
+  private Supplier<ZonedDateTime> currentTimeSupplier;
 
-  public AppPanel(final Supplier<AppFrame.OutputLineInfo> mixerSupplier) {
+  public AppPanel(
+      final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
+      final Supplier<ZonedDateTime> timeSupplier
+  ) {
     super(new BorderLayout(0, 0));
+    this.baseTimeSupplier = requireNonNull(timeSupplier);
+    this.currentTimeSupplier = this.baseTimeSupplier;
     this.mixerSupplier = requireNonNull(mixerSupplier);
-    this.timePanel = new TimePanel(() -> this.timeSupplier.get());
+    this.timePanel = new TimePanel(() -> this.currentTimeSupplier.get());
     this.timePanel.setBackground(TIME_PANEL_NORMAL);
     this.progressBarTime = new SignalProgressBar();
 
@@ -107,12 +111,12 @@ public class AppPanel extends JPanel {
         if (selected == null) {
           this.buttonCustomTime.setSelected(false);
         } else {
-          this.timeSupplier = () -> selected;
+          this.currentTimeSupplier = () -> selected;
           this.timePanel.setShowSecondsChange(false);
           this.timePanel.setBackground(TIME_PANEL_FIXED);
         }
       } else {
-        this.timeSupplier = TIME_SUPPLIER_CET_NOW;
+        this.currentTimeSupplier = this.baseTimeSupplier;
         this.timePanel.setShowSecondsChange(true);
         this.timePanel.setBackground(TIME_PANEL_NORMAL);
       }
@@ -190,7 +194,7 @@ public class AppPanel extends JPanel {
   }
 
   public ZonedDateTime getCurrentTime() {
-    return this.timeSupplier.get();
+    return this.currentTimeSupplier.get();
   }
 
   public void dispose() {
@@ -206,7 +210,7 @@ public class AppPanel extends JPanel {
   ) {
     final Thread thread = new Thread(() -> {
       ZonedDateTime zonedDateTime =
-          this.timeSupplier.get().withZoneSameInstant(Dcf77Record.ZONE_CET);
+          this.currentTimeSupplier.get().withZoneSameInstant(Dcf77Record.ZONE_CET);
       boolean addedSuccessfully = true;
       for (int i = 0;
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&
@@ -288,7 +292,10 @@ public class AppPanel extends JPanel {
 
       final int sampleRate = this.getSampleRate();
 
-      final Dcf77SignalSoundRenderer renderer = new Dcf77SignalSoundRenderer(70, sampleRate,
+      final Dcf77SignalSoundRenderer renderer = new Dcf77SignalSoundRenderer(
+          140,
+          sampleRate,
+          () -> this.currentTimeSupplier.get().toInstant(),
           audioFormat -> output.line);
 
       if (this.currentRenderer.compareAndSet(null, renderer)) {

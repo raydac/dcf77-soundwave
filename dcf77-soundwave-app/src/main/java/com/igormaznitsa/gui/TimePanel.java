@@ -3,7 +3,6 @@ package com.igormaznitsa.gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
@@ -77,7 +76,7 @@ public class TimePanel extends javax.swing.JPanel {
 
       final String sec;
       if (this.showSecondsChange) {
-        sec = LocalTime.now().getSecond() % 2 == 0 ? ":" : " ";
+        sec = time.getSecond() % 2 == 0 ? ":" : " ";
       } else {
         sec = ":";
       }
