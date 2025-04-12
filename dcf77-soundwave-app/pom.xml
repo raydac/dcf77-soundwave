@@ -129,8 +129,8 @@
                                 <mutexName>dcf77soundwave</mutexName>
                             </singleInstance>
                             <versionInfo>
-                                <fileVersion>1.0.0.0</fileVersion>
-                                <productVersion>1.0.0.0</productVersion>
+                                <fileVersion>1.0.1.0</fileVersion>
+                                <productVersion>1.0.1.0</productVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>DCF77Soundwave generator of CET signal</fileDescription>
                                 <copyright>2025 Igor Maznitsa</copyright>
