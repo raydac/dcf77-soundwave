@@ -84,7 +84,11 @@ public final class AppFrame extends JFrame {
       NtpTimeSource.timeSourceOf("United Arab Emirates", "ae.pool.ntp.org"),
       NtpTimeSource.timeSourceOf("China", "cn.pool.ntp.org"),
       NtpTimeSource.timeSourceOf("India", "in.pool.ntp.org"),
-      NtpTimeSource.timeSourceOf("Saudi Arabia", "sa.pool.ntp.org")
+      NtpTimeSource.timeSourceOf("Saudi Arabia", "sa.pool.ntp.org"),
+      NtpTimeSource.timeSourceSectionOf("Public servers"),
+      NtpTimeSource.timeSourceOf("Apple", "time.apple.com"),
+      NtpTimeSource.timeSourceOf("Facebook", "time.facebook.com"),
+      NtpTimeSource.timeSourceOf("Microsoft", "time.windows.com")
   );
 
   private static final FileFilter FILE_FILTER_WAV =
@@ -398,8 +402,8 @@ public final class AppFrame extends JFrame {
             final InetAddress inetAddress = InetAddress.getByName(timeSource.address);
             radioButtonMenuItem.setToolTipText(timeSource.address);
             radioButtonMenuItem.addActionListener(l -> {
-              AppFrame.this.setTitle(TITLE + " (NTP:" + timeSource.address + ')');
-              System.out.println("Selected time source: " + timeSource);
+              AppFrame.this.setTitle(TITLE + " (ntp://" + timeSource.address + ')');
+              System.out.println("Selected NTP server: " + timeSource);
 
               var future = this.ntpScheduledFuture.getAndSet(null);
               if (future != null) {
@@ -437,9 +441,9 @@ public final class AppFrame extends JFrame {
                       time = System.currentTimeMillis();
                     } else {
                       try {
-                        final TimeInfo info = ntpudpClient.getTime(inetAddress);
-                        time = info.getMessage().getTransmitTimeStamp().getTime();
                         ntpErrorCounter.set(MAX_NTP_ERROR_COUNTER);
+                        final TimeInfo info = ntpudpClient.getTime(inetAddress);
+                        time = System.currentTimeMillis() + info.getOffset();
                       } catch (Exception ex) {
                         if (ntpErrorCounter.decrementAndGet() <= 0) {
                           var thisFuture = this.ntpScheduledFuture.get();
