@@ -33,21 +33,21 @@ public class AppPanel extends JPanel {
   private final StartStopButton buttonStartStop;
   private static final Color TIME_PANEL_NORMAL = Color.BLUE.darker().darker().darker();
   private final Component progressBarReplacement;
-  private final ControlButton buttonSine;
-  private final ControlButton buttonSquare;
-  private final ControlButton buttonTriangle;
-  private final ControlButton button44100;
-  private final ControlButton button48000;
-  private final ControlButton button96000;
-  private final ControlButton button13700;
-  private final ControlButton button15500;
-  private final ControlButton button17125;
+  private final AppPanelToggleButton buttonSine;
+  private final AppPanelToggleButton buttonSquare;
+  private final AppPanelToggleButton buttonTriangle;
+  private final AppPanelToggleButton button44100;
+  private final AppPanelToggleButton button48000;
+  private final AppPanelToggleButton button96000;
+  private final AppPanelToggleButton button13700;
+  private final AppPanelToggleButton button15500;
+  private final AppPanelToggleButton button17125;
   private static final Color TIME_PANEL_FIXED = Color.RED.darker().darker().darker().darker();
 
   private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
   private final SignalProgressBar progressBarTime;
-  private final ControlButton buttonCustomTime;
+  private final AppPanelToggleButton buttonCustomTime;
   private Supplier<ZonedDateTime> baseTimeSupplier;
   private Supplier<ZonedDateTime> currentTimeSupplier;
 
@@ -87,20 +87,20 @@ public class AppPanel extends JPanel {
 
     final Font defaultButtonFont = UIManager.getFont("Button.font");
 
-    this.buttonSine = new ControlButton("w");
+    this.buttonSine = new AppPanelToggleButton("w");
     this.buttonSine.setToolTipText("Sine wave");
     this.buttonSine.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
-    this.buttonSquare = new ControlButton("Q");
+    this.buttonSquare = new AppPanelToggleButton("Q");
     this.buttonSquare.setToolTipText("Square wave");
     this.buttonSquare.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
-    this.buttonTriangle = new ControlButton("T");
+    this.buttonTriangle = new AppPanelToggleButton("T");
     this.buttonTriangle.setToolTipText("Triangular wave");
     this.buttonTriangle.setFont(
         GuiUtils.FONT_ADSR.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
 
-    this.buttonCustomTime = new ControlButton("[");
+    this.buttonCustomTime = new AppPanelToggleButton("[");
     this.buttonCustomTime.setToolTipText("Render custom time");
     this.buttonCustomTime.setFont(
         GuiUtils.FONT_SOSA.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
@@ -128,13 +128,13 @@ public class AppPanel extends JPanel {
     buttonGroupSignal.add(this.buttonSquare);
     buttonGroupSignal.add(this.buttonTriangle);
 
-    this.button13700 = new ControlButton("13700 Hz");
+    this.button13700 = new AppPanelToggleButton("13700 Hz");
     this.button13700.setToolTipText("Carrier frequency 13700 Hz");
 
-    this.button15500 = new ControlButton("15500 Hz");
+    this.button15500 = new AppPanelToggleButton("15500 Hz");
     this.button15500.setToolTipText("Carrier frequency 15500 Hz");
 
-    this.button17125 = new ControlButton("17125 Hz");
+    this.button17125 = new AppPanelToggleButton("17125 Hz");
     this.button17125.setToolTipText("Carrier frequency 17125 Hz");
 
     final ButtonGroup buttonGroupCarrier = new ButtonGroup();
@@ -142,13 +142,13 @@ public class AppPanel extends JPanel {
     buttonGroupCarrier.add(this.button15500);
     buttonGroupCarrier.add(this.button17125);
 
-    this.button44100 = new ControlButton("44.1 KHz");
+    this.button44100 = new AppPanelToggleButton("44.1 KHz");
     this.button44100.setToolTipText("Sound-card sampling 44100 Hz");
 
-    this.button48000 = new ControlButton("48 KHz");
+    this.button48000 = new AppPanelToggleButton("48 KHz");
     this.button48000.setToolTipText("Sound-card sampling 48000 Hz");
 
-    this.button96000 = new ControlButton("96 KHz");
+    this.button96000 = new AppPanelToggleButton("96 KHz");
     this.button96000.setToolTipText("Sound-card sampling 96000 Hz");
 
     final ButtonGroup buttonGroupSampleRate = new ButtonGroup();
