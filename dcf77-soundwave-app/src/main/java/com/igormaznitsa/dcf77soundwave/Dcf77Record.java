@@ -176,6 +176,9 @@ public final class Dcf77Record {
 
     while (bcdValue > 0) {
       int digit = bcdValue & 0xF;
+      if (digit > 9) {
+        throw new NumberFormatException("Wrong BCD format: " + digit);
+      }
       value += digit * factor;
       factor *= 10;
       bcdValue >>= 4;

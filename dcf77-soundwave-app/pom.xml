@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.igormaznitsa</groupId>
         <artifactId>dcf77-soundwave</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dcf77-soundwave-app</artifactId>
@@ -17,6 +17,7 @@
         <embedded.jdk.type>jdk</embedded.jdk.type>
         <embedded.jdk.version>24+37</embedded.jdk.version>
         <app.name>${project.build.finalName}</app.name>
+        <app.version.raw>1.0.2</app.version.raw>
         <final.ext></final.ext>
         <executable.jar>false</executable.jar>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -129,8 +130,8 @@
                                 <mutexName>dcf77soundwave</mutexName>
                             </singleInstance>
                             <versionInfo>
-                                <fileVersion>1.0.1.0</fileVersion>
-                                <productVersion>1.0.1.0</productVersion>
+                                <fileVersion>${app.version.raw}1.0.2.0</fileVersion>
+                                <productVersion>${app.version.raw}.0</productVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>DCF77Soundwave generator of CET signal</fileDescription>
                                 <copyright>2025 Igor Maznitsa</copyright>
