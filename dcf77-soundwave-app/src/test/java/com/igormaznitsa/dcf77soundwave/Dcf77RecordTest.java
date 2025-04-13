@@ -70,6 +70,9 @@ class Dcf77RecordTest {
         0b0_00010100101001_00010_1_1100100_1_100000_1_010010_001_10001_00000100_0_0L,
         true
     );
+
+    assertEquals("000010100101001000101110010011000001010010001100010000010000",
+        record.toBinaryString(true));
     assertTrue(record.isValid());
     assertEquals(0b100000L, record.getYearWithinCenturyRaw());
     assertEquals(0b10001L, record.getMonthRaw());

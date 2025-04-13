@@ -36,41 +36,28 @@ public final class Dcf77Record {
    * @throws NullPointerException thrown if time is null
    */
   public Dcf77Record(final ZonedDateTime time) {
-    final ZonedDateTime cetZoneTime =
-        Objects.requireNonNull(time, "Time must not be null").withZoneSameInstant(ZONE_CET);
-    final boolean summer =
-        cetZoneTime.getZone().getRules().isDaylightSavings(cetZoneTime.toInstant());
+    this(
+        false,
+        0,
+        false,
+        false,
+        ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
+        !ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
+        false,
+        toBCD(ensureCet(time).getMinute()),
+        toBCD(ensureCet(time).getHour()),
+        toBCD(ensureCet(time).getDayOfMonth()),
+        toBCD(ensureCet(time).getDayOfWeek().getValue()),
+        toBCD(ensureCet(time).getMonthValue()),
+        toBCD(ensureCet(time).getYear() % 100)
+    );
+  }
 
-    long data = setValue(0L, 0L, 1, 0b11111111111111L, true);
-
-    data = setValue(data, 0L, 15, 1L, true);
-    data = setValue(data, 0L, 16, 1L, true);
-    data = setValue(data, summer ? 1L : 0L, 17, 1L, true);
-    data = setValue(data, summer ? 0L : 1L, 18, 1L, true);
-    data = setValue(data, 0L, 19, 1L, true);
-    data = setValue(data, 1L, 20, 1L, true);
-    data = setValue(data, reverseLowestBits(toBCD(cetZoneTime.getMinute()), 7), 21, 0b111_111_1L,
-        true);
-    data = setValue(data, reverseLowestBits(toBCD(cetZoneTime.getHour()), 6), 29, 0b111_111L, true);
-    data = setValue(data, reverseLowestBits(toBCD(cetZoneTime.getDayOfMonth()), 6), 36, 0b111_111L,
-        true);
-    data = setValue(data, reverseLowestBits(toBCD(cetZoneTime.getDayOfWeek().getValue()), 3), 42,
-        0b111L,
-        true);
-    data =
-        setValue(data, reverseLowestBits(toBCD(cetZoneTime.getMonth().getValue()), 5), 45, 0b11111L,
-            true);
-    data = setValue(data,
-        reverseLowestBits(toBCD(cetZoneTime.getYear() - (cetZoneTime.getYear() / 100) * 100), 8),
-        50,
-        0b1111_1111L, true);
-
-    data = setValue(data, calcEvenParity(data, 21, 28) ? 1L : 0L, 28, 1L, true);
-    data = setValue(data, calcEvenParity(data, 29, 35) ? 1L : 0L, 35, 1L, true);
-    data = setValue(data, calcEvenParity(data, 36, 58) ? 1L : 0L, 58, 1L, true);
-
-    this.bitString = data;
-    this.hashCode = Objects.hashCode(data);
+  private static ZonedDateTime ensureCet(final ZonedDateTime time) {
+    if (time.getZone().equals(ZONE_CET)) {
+      return time;
+    }
+    return time.withZoneSameInstant(ZONE_CET);
   }
 
   /**
@@ -251,15 +238,13 @@ public final class Dcf77Record {
   /**
    * DCF77 record as bit string, 60 bits.
    *
-   * @param record source record
    * @param msb0   true if required MSB0 result, false if LSB0
    * @return 60 char string contains bit string
    */
-  public static String toBinaryString(
-      final Dcf77Record record,
+  public String toBinaryString(
       final boolean msb0
   ) {
-    final long value = record.bitString;
+    final long value = this.bitString;
     final String bitString;
     if (msb0) {
       bitString = Long.toBinaryString(reverseLowestBits(value, 60));
