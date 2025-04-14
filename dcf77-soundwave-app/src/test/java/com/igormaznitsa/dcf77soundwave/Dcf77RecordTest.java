@@ -62,6 +62,32 @@ class Dcf77RecordTest {
   }
 
   @Test
+  void testParseProvidedAsBits() {
+    // 2020-11-12 09:58:00
+    Dcf77Record record =
+        new Dcf77Record(0b001111100001011000101000110111001000010010001100010000010000L, true);
+    assertTrue(record.isValid());
+    assertEquals(12, record.getDayOfMonth());
+    assertEquals(11, record.getMonth());
+    assertEquals(20, record.getYearWithinCentury());
+    assertEquals(9, record.getHour());
+    assertEquals(58, record.getMinute());
+    assertFalse(record.isCest());
+    assertTrue(record.isCet());
+
+    // So, 26.10.08 01:55:00, SZ
+    record = new Dcf77Record(0b000010110001000001001101010101000001011001111000010001000000L, true);
+    assertTrue(record.isValid());
+    assertEquals(26, record.getDayOfMonth());
+    assertEquals(10, record.getMonth());
+    assertEquals(8, record.getYearWithinCentury());
+    assertEquals(1, record.getHour());
+    assertEquals(55, record.getMinute());
+    assertTrue(record.isCest());
+    assertFalse(record.isCet());
+  }
+
+  @Test
   void testDcf77Record() {
     final long etalonMsb0 =
         0b0_00010100101001_00010_1_1100100_1_100000_1_010010_001_10001_00000100_0_0L;
