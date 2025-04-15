@@ -1,7 +1,11 @@
 package com.igormaznitsa.gui;
 
-import com.igormaznitsa.dcf77soundwave.Dcf77Record;
-import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
+import static java.time.ZoneOffset.UTC;
+
+import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
+import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
+import com.igormaznitsa.soundtime.dcf77.Dcf77MinuteBasedTimeSignalSignalRenderer;
 import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -119,7 +123,8 @@ public final class AppFrame extends JFrame {
     this.setJMenuBar(this.makeMenuBar());
     this.appPanel = new AppPanel(
         this.currentMixer::get,
-        () -> ZonedDateTime.ofInstant(this.currentTime.get(), Dcf77Record.ZONE_CET)
+        this::getCurrentMinuteWavDataRenderer,
+        () -> ZonedDateTime.ofInstant(this.currentTime.get(), UTC)
     );
 
     this.setContentPane(this.appPanel);
@@ -256,6 +261,10 @@ public final class AppFrame extends JFrame {
     }
   }
 
+  private MinuteBasedTimeSignalWavRenderer getCurrentMinuteWavDataRenderer() {
+    return Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE;
+  }
+
   private void saveAs() {
     final JFileChooser fileChooser =
         new JFileChooser(this.lastSavedFile == null ? null : this.lastSavedFile.getParentFile());
@@ -290,17 +299,21 @@ public final class AppFrame extends JFrame {
         }
       }
 
-      final Dcf77SignalSoundRenderer renderer =
-          new Dcf77SignalSoundRenderer(120, this.appPanel.getSampleRate(), this.currentTime::get,
+      final MinuteBasedTimeSignalWavRenderer minuteBasedTimeSignalWavRenderer =
+          this.getCurrentMinuteWavDataRenderer();
+
+      final AmplitudeSoundSignalRenderer renderer =
+          new AmplitudeSoundSignalRenderer(minuteBasedTimeSignalWavRenderer, 120,
+              this.appPanel.getSampleRate(),
               a -> null);
-      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(Dcf77Record.ZONE_CET);
-      final List<Dcf77Record> recordList = new ArrayList<>();
+      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(UTC);
+      final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
-        recordList.add(new Dcf77Record(time));
+        recordList.add(minuteBasedTimeSignalWavRenderer.makeTimeSignalBits(time));
       }
       try {
         final byte[] wavData = renderer.renderWav(false, recordList, this.appPanel.getCarrierFreq(),
-            Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION,
+            minuteBasedTimeSignalWavRenderer.getAmplitudeDeviation(),
             this.appPanel.getSignalShape());
         FileUtils.writeByteArrayToFile(file, wavData);
         JOptionPane.showMessageDialog(this,

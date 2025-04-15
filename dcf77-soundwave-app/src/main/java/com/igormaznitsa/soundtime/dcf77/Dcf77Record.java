@@ -1,5 +1,6 @@
-package com.igormaznitsa.dcf77soundwave;
+package com.igormaznitsa.soundtime.dcf77;
 
+import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -10,7 +11,7 @@ import java.util.Objects;
  * @author Igor Maznitsa
  * @see <a href=”https://www.ptb.de/cms/fileadmin/internet/fachabteilungen/abteilung_4/4.4_zeit_und_frequenz/pdf/2004_Piester_-_PTB-Mitteilungen_114.pdf”>DCF77 specification</a>
  */
-public final class Dcf77Record {
+public final class Dcf77Record implements MinuteBasedTimeSignalBits {
   /**
    * Standard time zone for DCF77 signal.
    */
@@ -51,13 +52,6 @@ public final class Dcf77Record {
         toBCD(ensureCet(time).getMonthValue()),
         toBCD(ensureCet(time).getYear() % 100)
     );
-  }
-
-  private static ZonedDateTime ensureCet(final ZonedDateTime time) {
-    if (time.getZone().equals(ZONE_CET)) {
-      return time;
-    }
-    return time.withZoneSameInstant(ZONE_CET);
   }
 
   /**
@@ -127,6 +121,13 @@ public final class Dcf77Record {
       this.bitString = dcf77bits;
     }
     this.hashCode = Objects.hashCode(this.bitString);
+  }
+
+  public static ZonedDateTime ensureCet(final ZonedDateTime time) {
+    if (time.getZone().equals(ZONE_CET)) {
+      return time;
+    }
+    return time.withZoneSameInstant(ZONE_CET);
   }
 
   /**
@@ -238,7 +239,7 @@ public final class Dcf77Record {
   /**
    * DCF77 record as bit string, 60 bits.
    *
-   * @param msb0   true if required MSB0 result, false if LSB0
+   * @param msb0 true if required MSB0 result, false if LSB0
    * @return 60 char string contains bit string
    */
   public String toBinaryString(

@@ -1,12 +1,14 @@
 package com.igormaznitsa.gui;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNull;
 
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import com.github.lgooddatepicker.components.DateTimePicker;
 import com.github.lgooddatepicker.components.TimePickerSettings;
-import com.igormaznitsa.dcf77soundwave.Dcf77Record;
-import com.igormaznitsa.dcf77soundwave.Dcf77SignalSoundRenderer;
+import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
+import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -29,9 +31,10 @@ import javax.swing.UIManager;
 
 public class AppPanel extends JPanel {
 
+  private static final Color TIME_PANEL_NORMAL = Color.BLUE.darker().darker().darker();
+  private static final Color TIME_PANEL_FIXED = Color.RED.darker().darker().darker().darker();
   private final TimePanel timePanel;
   private final StartStopButton buttonStartStop;
-  private static final Color TIME_PANEL_NORMAL = Color.BLUE.darker().darker().darker();
   private final Component progressBarReplacement;
   private final AppPanelToggleButton buttonSine;
   private final AppPanelToggleButton buttonSquare;
@@ -42,20 +45,23 @@ public class AppPanel extends JPanel {
   private final AppPanelToggleButton button13700;
   private final AppPanelToggleButton button15500;
   private final AppPanelToggleButton button17125;
-  private static final Color TIME_PANEL_FIXED = Color.RED.darker().darker().darker().darker();
-
-  private final AtomicReference<Dcf77SignalSoundRenderer> currentRenderer = new AtomicReference<>();
+  private final AtomicReference<AmplitudeSoundSignalRenderer> currentRenderer =
+      new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
   private final SignalProgressBar progressBarTime;
   private final AppPanelToggleButton buttonCustomTime;
-  private Supplier<ZonedDateTime> baseTimeSupplier;
-  private Supplier<ZonedDateTime> currentTimeSupplier;
+  private final Supplier<ZonedDateTime> baseTimeSupplier;
+  private final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier;
+  private volatile Supplier<ZonedDateTime> currentTimeSupplier;
+
 
   public AppPanel(
       final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
+      final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier,
       final Supplier<ZonedDateTime> timeSupplier
   ) {
     super(new BorderLayout(0, 0));
+    this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
     this.baseTimeSupplier = requireNonNull(timeSupplier);
     this.currentTimeSupplier = this.baseTimeSupplier;
     this.mixerSupplier = requireNonNull(mixerSupplier);
@@ -203,25 +209,28 @@ public class AppPanel extends JPanel {
   }
 
   private void sendTimeData(
-      final Dcf77SignalSoundRenderer renderer,
+      final AmplitudeSoundSignalRenderer renderer,
       final int numberOfRenderedMinutes,
       final int freqHz,
-      final Dcf77SignalSoundRenderer.SignalShape shape
+      final AmplitudeSoundSignalRenderer.SignalShape shape
   ) {
+    final MinuteBasedTimeSignalWavRenderer minuteRenderer =
+        this.minuteWavDataRendererSupplier.get();
     final Thread thread = new Thread(() -> {
       ZonedDateTime zonedDateTime =
-          this.currentTimeSupplier.get().withZoneSameInstant(Dcf77Record.ZONE_CET);
+          this.currentTimeSupplier.get().withZoneSameInstant(UTC);
       boolean addedSuccessfully = true;
       for (int i = 0;
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&
                !Thread.currentThread().isInterrupted(); i++) {
-        addedSuccessfully &= renderer.offer(i == 0, new Dcf77Record(zonedDateTime), freqHz,
-            Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION, shape);
+        addedSuccessfully &=
+            renderer.offer(i == 0, minuteRenderer.makeTimeSignalBits(zonedDateTime), freqHz,
+                this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
         zonedDateTime = zonedDateTime.plusMinutes(1);
       }
-      final Dcf77Record stopRecord = new Dcf77Record(zonedDateTime);
+      final MinuteBasedTimeSignalBits stopRecord = minuteRenderer.makeTimeSignalBits(zonedDateTime);
       addedSuccessfully &= renderer.offer(false, stopRecord, freqHz,
-          Dcf77SignalSoundRenderer.DCF77_STANDARD_AMPLITUDE_DEVIATION, shape);
+          this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
 
       if (!addedSuccessfully) {
         final boolean disposeAsCause = renderer.isDisposed();
@@ -235,7 +244,7 @@ public class AppPanel extends JPanel {
         }
         return;
       }
-      renderer.addDcf77SignalSoundRendererListener(
+      renderer.addAmplitudeSoundSignalRendererListener(
           (source, record) -> {
             if (source == renderer
                 && !source.isDisposed()
@@ -279,7 +288,7 @@ public class AppPanel extends JPanel {
           localTime.getHour(),
           localTime.getMinute(),
           localTime.getSecond(),
-          0, Dcf77Record.ZONE_CET);
+          0, UTC);
     }
     return null;
   }
@@ -292,10 +301,10 @@ public class AppPanel extends JPanel {
 
       final int sampleRate = this.getSampleRate();
 
-      final Dcf77SignalSoundRenderer renderer = new Dcf77SignalSoundRenderer(
+      final AmplitudeSoundSignalRenderer renderer = new AmplitudeSoundSignalRenderer(
+          this.minuteWavDataRendererSupplier.get(),
           140,
           sampleRate,
-          () -> this.currentTimeSupplier.get().toInstant(),
           audioFormat -> output.line);
 
       if (this.currentRenderer.compareAndSet(null, renderer)) {
@@ -303,7 +312,7 @@ public class AppPanel extends JPanel {
           renderer.initAudioLine();
           renderer.startAudio();
 
-          final Dcf77SignalSoundRenderer.SignalShape shape = this.getSignalShape();
+          final AmplitudeSoundSignalRenderer.SignalShape shape = this.getSignalShape();
           final int freq = this.getCarrierFreq();
 
           this.sendTimeData(renderer, 60, freq, shape);
@@ -318,7 +327,7 @@ public class AppPanel extends JPanel {
   }
 
   private void stopRendering(final Runnable nextSwingAction) {
-    final Dcf77SignalSoundRenderer renderer = this.currentRenderer.getAndSet(null);
+    final AmplitudeSoundSignalRenderer renderer = this.currentRenderer.getAndSet(null);
     if (renderer != null) {
       final Thread stopThread = new Thread(renderer::dispose, "stopping");
       stopThread.setDaemon(true);
@@ -375,14 +384,14 @@ public class AppPanel extends JPanel {
     return 17125;
   }
 
-  public Dcf77SignalSoundRenderer.SignalShape getSignalShape() {
+  public AmplitudeSoundSignalRenderer.SignalShape getSignalShape() {
     if (this.buttonSine.isSelected()) {
-      return Dcf77SignalSoundRenderer.SignalShape.SIN;
+      return AmplitudeSoundSignalRenderer.SignalShape.SIN;
     }
     if (this.buttonSquare.isSelected()) {
-      return Dcf77SignalSoundRenderer.SignalShape.SQUARE;
+      return AmplitudeSoundSignalRenderer.SignalShape.SQUARE;
     }
-    return Dcf77SignalSoundRenderer.SignalShape.TRIANGLE;
+    return AmplitudeSoundSignalRenderer.SignalShape.TRIANGLE;
   }
 
   public int getSampleRate() {
