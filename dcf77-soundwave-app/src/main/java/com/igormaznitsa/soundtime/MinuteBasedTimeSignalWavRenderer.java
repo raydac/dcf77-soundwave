@@ -1,6 +1,7 @@
 package com.igormaznitsa.soundtime;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public interface MinuteBasedTimeSignalWavRenderer {
 
@@ -16,5 +17,7 @@ public interface MinuteBasedTimeSignalWavRenderer {
   double getAmplitudeDeviation();
 
   MinuteBasedTimeSignalBits makeTimeSignalBits(ZonedDateTime zonedDateTime);
+
+  List<Integer> getAllowedCarrierFrequences();
 
 }

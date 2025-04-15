@@ -440,5 +440,4 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
     return (calcEvenParity(bitString, 36, 58) ? 1L : 0L) == bits(bitString, 58, 1L);
   }
 
-
 }

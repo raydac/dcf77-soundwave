@@ -101,6 +101,8 @@ public final class AppFrame extends JFrame {
       new Mode("DCF77", "German long-wave time signal and standard-frequency radio station",
           Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
       new Mode("JJY", "Japan low frequency time signal radio station",
+          Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
+      new Mode("WWVB", "North America low frequency time signal radio station",
           Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE)
   );
 
@@ -131,13 +133,12 @@ public final class AppFrame extends JFrame {
     this.setIconImages(loadAppIcons());
 
     this.currentMixer.set(findDefaultOutputMixer());
-    this.setJMenuBar(this.makeMenuBar());
     this.appPanel = new AppPanel(
         this.currentMixer::get,
         this::getCurrentMinuteWavDataRenderer,
         () -> ZonedDateTime.ofInstant(this.currentTime.get(), UTC)
     );
-
+    this.setJMenuBar(this.makeMenuBar());
     this.setContentPane(this.appPanel);
     this.pack();
     this.setResizable(false);
@@ -168,6 +169,7 @@ public final class AppFrame extends JFrame {
     this.timer = new Timer(NTP_REFRESH_DELAY_MS, a -> this.appPanel.getTimePanel().refreshTime());
     this.timer.start();
     this.appPanel.getTimePanel().refreshTime();
+    this.appPanel.refreshFreqButtons();
   }
 
   private static List<Image> loadAppIcons() {
@@ -343,7 +345,6 @@ public final class AppFrame extends JFrame {
   private JMenuBar makeMenuBar() {
     final JMenuBar menuBar = new JMenuBar();
     final JMenu menuFile = new JMenu("File");
-
     final JMenu menuMode = new JMenu("Mode");
     final ButtonGroup modeButtonGroup = new ButtonGroup();
     MODES.forEach(x -> {
@@ -353,6 +354,7 @@ public final class AppFrame extends JFrame {
       modeButton.addActionListener(a -> {
         System.out.println("Selected mode: " + x.name);
         this.currentTimeSignalRenderer.set(x.renderer);
+        this.appPanel.refreshFreqButtons();
       });
       menuMode.add(modeButton);
     });
@@ -565,12 +567,10 @@ public final class AppFrame extends JFrame {
     menuBar.add(menuHelp);
 
     activateFirstNtpSource.run();
-
     Arrays.stream(menuMode.getMenuComponents())
         .filter(x -> x instanceof JRadioButtonMenuItem)
         .findFirst()
         .ifPresent(x -> ((JRadioButtonMenuItem) x).doClick());
-
     return menuBar;
   }
 

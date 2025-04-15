@@ -19,6 +19,7 @@ import java.awt.GridLayout;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -42,9 +43,9 @@ public class AppPanel extends JPanel {
   private final AppPanelToggleButton button44100;
   private final AppPanelToggleButton button48000;
   private final AppPanelToggleButton button96000;
-  private final AppPanelToggleButton button13700;
-  private final AppPanelToggleButton button15500;
-  private final AppPanelToggleButton button17125;
+  private final AppPanelToggleButton buttonFreq1;
+  private final AppPanelToggleButton buttonFreq2;
+  private final AppPanelToggleButton buttonFreq3;
   private final AtomicReference<AmplitudeSoundSignalRenderer> currentRenderer =
       new AtomicReference<>();
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
@@ -53,7 +54,6 @@ public class AppPanel extends JPanel {
   private final Supplier<ZonedDateTime> baseTimeSupplier;
   private final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier;
   private volatile Supplier<ZonedDateTime> currentTimeSupplier;
-
 
   public AppPanel(
       final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
@@ -134,19 +134,14 @@ public class AppPanel extends JPanel {
     buttonGroupSignal.add(this.buttonSquare);
     buttonGroupSignal.add(this.buttonTriangle);
 
-    this.button13700 = new AppPanelToggleButton("13700 Hz");
-    this.button13700.setToolTipText("Carrier frequency 13700 Hz");
-
-    this.button15500 = new AppPanelToggleButton("15500 Hz");
-    this.button15500.setToolTipText("Carrier frequency 15500 Hz");
-
-    this.button17125 = new AppPanelToggleButton("17125 Hz");
-    this.button17125.setToolTipText("Carrier frequency 17125 Hz");
+    this.buttonFreq1 = new AppPanelToggleButton("");
+    this.buttonFreq2 = new AppPanelToggleButton("");
+    this.buttonFreq3 = new AppPanelToggleButton("");
 
     final ButtonGroup buttonGroupCarrier = new ButtonGroup();
-    buttonGroupCarrier.add(this.button13700);
-    buttonGroupCarrier.add(this.button15500);
-    buttonGroupCarrier.add(this.button17125);
+    buttonGroupCarrier.add(this.buttonFreq1);
+    buttonGroupCarrier.add(this.buttonFreq2);
+    buttonGroupCarrier.add(this.buttonFreq3);
 
     this.button44100 = new AppPanelToggleButton("44.1 KHz");
     this.button44100.setToolTipText("Sound-card sampling 44100 Hz");
@@ -166,9 +161,9 @@ public class AppPanel extends JPanel {
     controlPanel.add(this.buttonSquare);
     controlPanel.add(this.buttonTriangle);
 
-    controlPanel.add(this.button13700);
-    controlPanel.add(this.button15500);
-    controlPanel.add(this.button17125);
+    controlPanel.add(this.buttonFreq1);
+    controlPanel.add(this.buttonFreq2);
+    controlPanel.add(this.buttonFreq3);
 
     controlPanel.add(this.button44100);
     controlPanel.add(this.button48000);
@@ -181,7 +176,7 @@ public class AppPanel extends JPanel {
 
     this.buttonSine.setSelected(true);
     this.button44100.setSelected(true);
-    this.button15500.setSelected(true);
+    this.buttonFreq2.setSelected(true);
 
 
     this.buttonStartStop.addActionListener(e -> {
@@ -197,6 +192,30 @@ public class AppPanel extends JPanel {
         this.stopRendering(null);
       }
     });
+  }
+
+  public void refreshFreqButtons() {
+    this.buttonFreq1.setText("");
+    this.buttonFreq1.setToolTipText(null);
+    this.buttonFreq2.setText("");
+    this.buttonFreq2.setToolTipText(null);
+    this.buttonFreq3.setText("");
+    this.buttonFreq3.setToolTipText(null);
+    final MinuteBasedTimeSignalWavRenderer renderer = this.minuteWavDataRendererSupplier.get();
+    final List<Integer> allowedCarrierFreq = this.minuteWavDataRendererSupplier.get()
+        .getAllowedCarrierFrequences();
+    if (!allowedCarrierFreq.isEmpty()) {
+      this.buttonFreq1.setText(allowedCarrierFreq.get(0) + " Hz");
+      this.buttonFreq1.setToolTipText("Carrier frequency " + allowedCarrierFreq.get(0) + " Hz");
+    }
+    if (allowedCarrierFreq.size() > 1) {
+      this.buttonFreq2.setText(allowedCarrierFreq.get(1) + " Hz");
+      this.buttonFreq2.setToolTipText("Carrier frequency " + allowedCarrierFreq.get(1) + " Hz");
+    }
+    if (allowedCarrierFreq.size() > 2) {
+      this.buttonFreq3.setText(allowedCarrierFreq.get(2) + " Hz");
+      this.buttonFreq3.setToolTipText("Carrier frequency " + allowedCarrierFreq.get(2) + " Hz");
+    }
   }
 
   public ZonedDateTime getCurrentTime() {
@@ -360,9 +379,9 @@ public class AppPanel extends JPanel {
     this.button44100.setEnabled(flag);
     this.button48000.setEnabled(flag);
     this.button96000.setEnabled(flag);
-    this.button13700.setEnabled(flag);
-    this.button15500.setEnabled(flag);
-    this.button17125.setEnabled(flag);
+    this.buttonFreq1.setEnabled(flag);
+    this.buttonFreq2.setEnabled(flag);
+    this.buttonFreq3.setEnabled(flag);
     this.buttonCustomTime.setEnabled(flag);
   }
 
@@ -375,13 +394,18 @@ public class AppPanel extends JPanel {
   }
 
   public int getCarrierFreq() {
-    if (this.button13700.isSelected()) {
-      return 13700;
+    final MinuteBasedTimeSignalWavRenderer renderer = this.minuteWavDataRendererSupplier.get();
+    if (renderer == null) {
+      return -1;
     }
-    if (this.button15500.isSelected()) {
-      return 15500;
+    final List<Integer> freq = renderer.getAllowedCarrierFrequences();
+    if (this.buttonFreq1.isSelected()) {
+      return freq.get(0);
     }
-    return 17125;
+    if (this.buttonFreq2.isSelected()) {
+      return freq.get(1);
+    }
+    return freq.get(2);
   }
 
   public AmplitudeSoundSignalRenderer.SignalShape getSignalShape() {

@@ -5,16 +5,22 @@ import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSignalWavRenderer {
 
   public static final Dcf77MinuteBasedTimeSignalSignalRenderer
       INSTANCE = new Dcf77MinuteBasedTimeSignalSignalRenderer();
-
   /**
    * Standard amplitude deviation for DCF77 amplitude modulation.
    */
   public static final double DCF77_STANDARD_AMPLITUDE_DEVIATION = 0.85d;
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(13700, 15500, 17125);
+
+  @Override
+  public List<Integer> getAllowedCarrierFrequences() {
+    return ALLOWED_CARRIER_FREQ;
+  }
 
   @Override
   public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {

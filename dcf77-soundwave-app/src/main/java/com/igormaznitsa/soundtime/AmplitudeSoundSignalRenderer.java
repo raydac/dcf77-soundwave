@@ -113,6 +113,10 @@ public class AmplitudeSoundSignalRenderer {
       final double amplitudeDeviation,
       final SignalShape signalShape) throws IOException {
 
+    if (freqHz <= 0 || freqHz > this.sampleRate) {
+      throw new IllegalArgumentException("Freq must be 0.." + this.sampleRate + ": " + freqHz);
+    }
+
     boolean seconds = secondsAwareness;
 
     final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
