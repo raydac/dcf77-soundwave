@@ -1,9 +1,8 @@
 package com.igormaznitsa.soundtime.dcf77;
 
-import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
+import com.igormaznitsa.soundtime.AbstractMinuteBasedTimeSignalRecord;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Objects;
 
 /**
  * Implementation of DCF77 record.
@@ -11,17 +10,11 @@ import java.util.Objects;
  * @author Igor Maznitsa
  * @see <a href=”https://www.ptb.de/cms/fileadmin/internet/fachabteilungen/abteilung_4/4.4_zeit_und_frequenz/pdf/2004_Piester_-_PTB-Mitteilungen_114.pdf”>DCF77 specification</a>
  */
-public final class Dcf77Record implements MinuteBasedTimeSignalBits {
+public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
   /**
    * Standard time zone for DCF77 signal.
    */
   public static final ZoneId ZONE_CET = ZoneId.of("CET");
-
-  /**
-   * Contains bit data of the record.
-   */
-  private final long bitString;
-  private final int hashCode;
 
   /**
    * Create record for now.
@@ -86,6 +79,48 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
       final int bcdMonthNumber,
       final int bcdYearWithinCentury
   ) {
+    super(makeData(
+        msb0,
+        civilWarningBits,
+        callBit,
+        summerTimeAnnouncement,
+        cest,
+        cet,
+        leapSecondAnnouncement,
+        bcdMinutes,
+        bcdHours,
+        bcdDayOfMonth,
+        bcdDayOfWeek,
+        bcdMonthNumber,
+        bcdYearWithinCentury
+    ));
+  }
+
+  /**
+   * Create from DCF77 bit vector
+   *
+   * @param dcf77bits bit vector
+   * @param msb0      if true then vector in MSB0, LSB0 otherwise
+   */
+  public Dcf77Record(final long dcf77bits, final boolean msb0) {
+    super(msb0 ? reverseLowestBits(dcf77bits, 60) : dcf77bits);
+  }
+
+  private static long makeData(
+      final boolean msb0,
+      final int civilWarningBits,
+      final boolean callBit,
+      final boolean summerTimeAnnouncement,
+      final boolean cest,
+      final boolean cet,
+      final boolean leapSecondAnnouncement,
+      final int bcdMinutes,
+      final int bcdHours,
+      final int bcdDayOfMonth,
+      final int bcdDayOfWeek,
+      final int bcdMonthNumber,
+      final int bcdYearWithinCentury
+  ) {
     long data = setValue(0L, civilWarningBits, 1, 0b11111111111111L, msb0);
     data = setValue(data, callBit ? 1L : 0L, 15, 1L, msb0);
     data = setValue(data, summerTimeAnnouncement ? 1L : 0L, 16, 1L, msb0);
@@ -104,23 +139,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
     data = setValue(data, calcEvenParity(data, 29, 35) ? 1L : 0L, 35, 1L, msb0);
     data = setValue(data, calcEvenParity(data, 36, 58) ? 1L : 0L, 58, 1L, msb0);
 
-    this.bitString = data;
-    this.hashCode = Objects.hashCode(data);
-  }
-
-  /**
-   * Create from DCF77 bit vector
-   *
-   * @param dcf77bits bit vector
-   * @param msb0      if true then vector in MSB0, LSB0 otherwise
-   */
-  public Dcf77Record(final long dcf77bits, final boolean msb0) {
-    if (msb0) {
-      this.bitString = reverseLowestBits(dcf77bits, 60);
-    } else {
-      this.bitString = dcf77bits;
-    }
-    this.hashCode = Objects.hashCode(this.bitString);
+    return data;
   }
 
   public static ZonedDateTime ensureCet(final ZonedDateTime time) {
@@ -128,67 +147,6 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
       return time;
     }
     return time.withZoneSameInstant(ZONE_CET);
-  }
-
-  /**
-   * Encode integer value as BCD.
-   *
-   * @param value must be in 0..255 diapason.
-   * @return encoded BCD value
-   */
-  public static int toBCD(int value) {
-    if (value < 0 || value > 255) {
-      throw new IllegalArgumentException("Value must be between 0 and 255");
-    }
-    int bcd = 0;
-    int shift = 0;
-
-    while (value > 0) {
-      int digit = value % 10;
-      bcd |= (digit << (shift * 4));
-      value /= 10;
-      shift++;
-    }
-    return bcd;
-  }
-
-  /**
-   * Decode BCD value as integer.
-   *
-   * @param bcdValue BCD value.
-   * @return decoded value 0..255
-   */
-  public static int fromBCD(int bcdValue) {
-    int value = 0;
-    int factor = 1;
-
-    while (bcdValue > 0) {
-      int digit = bcdValue & 0xF;
-      if (digit > 9) {
-        throw new NumberFormatException("Wrong BCD format: " + digit);
-      }
-      value += digit * factor;
-      factor *= 10;
-      bcdValue >>= 4;
-    }
-    return value;
-  }
-
-  /**
-   * Get reversed bit value.
-   *
-   * @param value              source value
-   * @param numberOfLowestBits number of lowest bits to reverse
-   * @return result with reversed lowest bits
-   */
-  public static long reverseLowestBits(final long value, final int numberOfLowestBits) {
-    long acc = 0L;
-    long src = value;
-    for (int i = 0; i < numberOfLowestBits; i++) {
-      acc = (acc << 1) | (src & 1L);
-      src >>>= 1L;
-    }
-    return acc;
   }
 
   private static long setValue(
@@ -215,66 +173,6 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
     return (data & ~(mask << shift)) | shiftedMaskedValue;
   }
 
-  private static long bits(
-      final long data,
-      final int shift,
-      final long mask
-  ) {
-    long result = (data >>> shift) & mask;
-    if (mask > 1L) {
-      long reversed = 0L;
-      long restMask = mask;
-
-      while (restMask != 0L) {
-        reversed = (reversed << 1L) | (result & 1L);
-        result >>>= 1;
-        restMask >>>= 1;
-      }
-      return reversed;
-    } else {
-      return result;
-    }
-  }
-
-  /**
-   * DCF77 record as bit string, 60 bits.
-   *
-   * @param msb0 true if required MSB0 result, false if LSB0
-   * @return 60 char string contains bit string
-   */
-  public String toBinaryString(
-      final boolean msb0
-  ) {
-    final long value = this.bitString;
-    final String bitString;
-    if (msb0) {
-      bitString = Long.toBinaryString(reverseLowestBits(value, 60));
-    } else {
-      bitString = Long.toBinaryString(value);
-    }
-    final StringBuilder buffer = new StringBuilder();
-    int diff = 60 - bitString.length();
-    while (diff > 0) {
-      buffer.append('0');
-      diff--;
-    }
-    return buffer.append(bitString).toString();
-  }
-
-  @Override
-  public boolean equals(final Object that) {
-    if (that == null || getClass() != that.getClass()) {
-      return false;
-    }
-    Dcf77Record record = (Dcf77Record) that;
-    return this.bitString == record.bitString;
-  }
-
-  @Override
-  public int hashCode() {
-    return this.hashCode;
-  }
-
   @Override
   public String toString() {
     final StringBuilder stringBuilder = new StringBuilder(this.getClass().getSimpleName());
@@ -297,9 +195,9 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
 
   public long getBitString(final boolean msb0) {
     if (msb0) {
-      return reverseLowestBits(this.bitString, 60);
+      return reverseLowestBits(this.getRawBitString(), 60);
     } else {
-      return this.bitString;
+      return this.getRawBitString();
     }
   }
 
@@ -309,7 +207,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return civil warning bits as LSB0
    */
   public long getCivilWarningBits() {
-    return reverseLowestBits(bits(this.bitString, 1, 0b11_1111_1111_1111L), 14);
+    return reverseLowestBits(bits(this.getRawBitString(), 1, 0b11_1111_1111_1111L), 14);
   }
 
   /**
@@ -318,7 +216,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true or false
    */
   public boolean isCallBit() {
-    return bits(this.bitString, 15, 1L) != 0L;
+    return bits(this.getRawBitString(), 15, 1L) != 0L;
   }
 
   /**
@@ -327,7 +225,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return summer time announcement
    */
   public boolean isSummerTimeAnnouncement() {
-    return bits(this.bitString, 16, 1L) != 0L;
+    return bits(this.getRawBitString(), 16, 1L) != 0L;
   }
 
   /**
@@ -336,7 +234,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true or false
    */
   public boolean isCest() {
-    return bits(this.bitString, 17, 1L) != 0L;
+    return bits(this.getRawBitString(), 17, 1L) != 0L;
   }
 
   /**
@@ -345,7 +243,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true or false
    */
   public boolean isCet() {
-    return bits(this.bitString, 18, 1L) != 0L;
+    return bits(this.getRawBitString(), 18, 1L) != 0L;
   }
 
   /**
@@ -354,7 +252,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true or false
    */
   public boolean isLeapSecondAnnouncement() {
-    return bits(this.bitString, 19, 1L) != 0L;
+    return bits(this.getRawBitString(), 19, 1L) != 0L;
   }
 
   /**
@@ -363,7 +261,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true if valid packet
    */
   public boolean isMinuteStartBit() {
-    return bits(this.bitString, 20, 1L) != 0L;
+    return bits(this.getRawBitString(), 20, 1L) != 0L;
   }
 
   /**
@@ -381,11 +279,11 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw minute value
    */
   public long getMinuteRaw() {
-    return (int) reverseLowestBits(bits(this.bitString, 21, 0b1111111L), 7);
+    return (int) reverseLowestBits(bits(this.getRawBitString(), 21, 0b1111111L), 7);
   }
 
   public boolean isMinuteEvenParity() {
-    return bits(this.bitString, 28, 0b1L) != 0L;
+    return bits(this.getRawBitString(), 28, 0b1L) != 0L;
   }
 
   /**
@@ -403,11 +301,11 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw hour value
    */
   public long getHourRaw() {
-    return reverseLowestBits(bits(this.bitString, 29, 0b111111L), 6);
+    return reverseLowestBits(bits(this.getRawBitString(), 29, 0b111111L), 6);
   }
 
   public boolean isHourEvenParity() {
-    return bits(this.bitString, 35, 0b1L) != 0L;
+    return bits(this.getRawBitString(), 35, 0b1L) != 0L;
   }
 
   /**
@@ -425,7 +323,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw day of month value
    */
   public long getDayOfMonthRaw() {
-    return reverseLowestBits(bits(this.bitString, 36, 0b111111L), 6);
+    return reverseLowestBits(bits(this.getRawBitString(), 36, 0b111111L), 6);
   }
 
   /**
@@ -443,7 +341,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw day of week value
    */
   public long getDayOfWeekRaw() {
-    return reverseLowestBits(bits(this.bitString, 42, 0b111L), 3);
+    return reverseLowestBits(bits(this.getRawBitString(), 42, 0b111L), 3);
   }
 
   /**
@@ -461,7 +359,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw month value
    */
   public long getMonthRaw() {
-    return reverseLowestBits(bits(this.bitString, 45, 0b11111L), 5);
+    return reverseLowestBits(bits(this.getRawBitString(), 45, 0b11111L), 5);
   }
 
   /**
@@ -479,7 +377,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return the LSB0 raw year within century value
    */
   public long getYearWithinCenturyRaw() {
-    return reverseLowestBits(bits(this.bitString, 50, 0b1111_1111L), 8);
+    return reverseLowestBits(bits(this.getRawBitString(), 50, 0b1111_1111L), 8);
   }
 
   /**
@@ -488,7 +386,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true if even and false otherwise
    */
   public boolean isDateEvenParity() {
-    return bits(this.bitString, 58, 1L) != 0L;
+    return bits(this.getRawBitString(), 58, 1L) != 0L;
   }
 
   /**
@@ -497,7 +395,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    * @return true or false, must be false for valid record.
    */
   public boolean isMinuteMark() {
-    return bits(this.bitString, 59, 1L) != 0L;
+    return bits(this.getRawBitString(), 59, 1L) != 0L;
   }
 
   /**
@@ -505,7 +403,7 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
    *
    * @return decoded zoned date time in CET zone
    */
-  public ZonedDateTime getDateTime() {
+  public ZonedDateTime makeDateTime() {
     return ZonedDateTime.of(
         this.getYearWithinCentury() + 2000,
         this.getMonth(),
@@ -517,37 +415,29 @@ public final class Dcf77Record implements MinuteBasedTimeSignalBits {
         ZONE_CET);
   }
 
-  private boolean calcEvenParity(final long data, final int from, final int to) {
-    boolean result = false;
-    for (int i = from; i < to; i++) {
-      if (bits(data, i, 1L) != 0L) {
-        result = !result;
-      }
-    }
-    return result;
-  }
-
   /**
    * Check that the record has valid state of its bit fields. It checks even and synchro flags.
    *
    * @return true if the record has valid data, false otherwise.
    */
+  @Override
   public boolean isValid() {
+    final long bitString = this.getRawBitString();
     if (
-        bits(this.bitString, 0, 1L) != 0L
-            || bits(this.bitString, 59, 1L) != 0L
-            || bits(this.bitString, 20, 1L) == 0L
+        bits(bitString, 0, 1L) != 0L
+            || bits(bitString, 59, 1L) != 0L
+            || bits(bitString, 20, 1L) == 0L
     ) {
       return false;
     }
 
-    if ((this.calcEvenParity(this.bitString, 21, 28) ? 1L : 0L) != bits(this.bitString, 28, 1L)) {
+    if ((calcEvenParity(bitString, 21, 28) ? 1L : 0L) != bits(bitString, 28, 1L)) {
       return false;
     }
-    if ((this.calcEvenParity(this.bitString, 29, 35) ? 1L : 0L) != bits(this.bitString, 35, 1L)) {
+    if ((calcEvenParity(bitString, 29, 35) ? 1L : 0L) != bits(bitString, 35, 1L)) {
       return false;
     }
-    return (this.calcEvenParity(this.bitString, 36, 58) ? 1L : 0L) == bits(this.bitString, 58, 1L);
+    return (calcEvenParity(bitString, 36, 58) ? 1L : 0L) == bits(bitString, 58, 1L);
   }
 
 
