@@ -1,4 +1,4 @@
-package com.igormaznitsa.dcf77soundwave;
+package com.igormaznitsa.soundtime.dcf77;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -36,6 +37,7 @@ import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
+import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
@@ -95,6 +97,13 @@ public final class AppFrame extends JFrame {
       NtpTimeSource.timeSourceOf("Microsoft", "time.windows.com")
   );
 
+  private static final List<Mode> MODES = List.of(
+      new Mode("DCF77", "German long-wave time signal and standard-frequency radio station",
+          Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
+      new Mode("JJY", "Japan low frequency time signal radio station",
+          Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE)
+  );
+
   private static final FileFilter FILE_FILTER_WAV =
       new FileNameExtensionFilter("WAV file (*.wav)", "wav");
   private static final int NTP_REFRESH_DELAY_MS = 333;
@@ -112,6 +121,8 @@ public final class AppFrame extends JFrame {
         return thread;
       }, (r, executor) -> System.err.println("Detected rejected ntp task"));
   private final AtomicReference<ScheduledFuture<?>> ntpScheduledFuture = new AtomicReference<>();
+  private final AtomicReference<MinuteBasedTimeSignalWavRenderer> currentTimeSignalRenderer =
+      new AtomicReference<>();
   private File lastSavedFile;
 
   public AppFrame() {
@@ -262,7 +273,7 @@ public final class AppFrame extends JFrame {
   }
 
   private MinuteBasedTimeSignalWavRenderer getCurrentMinuteWavDataRenderer() {
-    return Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE;
+    return this.currentTimeSignalRenderer.get();
   }
 
   private void saveAs() {
@@ -333,6 +344,19 @@ public final class AppFrame extends JFrame {
     final JMenuBar menuBar = new JMenuBar();
     final JMenu menuFile = new JMenu("File");
 
+    final JMenu menuMode = new JMenu("Mode");
+    final ButtonGroup modeButtonGroup = new ButtonGroup();
+    MODES.forEach(x -> {
+      final JRadioButtonMenuItem modeButton = new JRadioButtonMenuItem(x.name);
+      modeButtonGroup.add(modeButton);
+      modeButton.setToolTipText(x.toolTip);
+      modeButton.addActionListener(a -> {
+        System.out.println("Selected mode: " + x.name);
+        this.currentTimeSignalRenderer.set(x.renderer);
+      });
+      menuMode.add(modeButton);
+    });
+
     final JMenu menuSettings = new JMenu("Settings");
     final JMenu menuHelp = new JMenu("Help");
 
@@ -371,8 +395,14 @@ public final class AppFrame extends JFrame {
     final JMenu menuSourceNtpServer = new JMenu("Time sources");
     menuSourceNtpServer.setIcon(GuiUtils.loadIcon("time_go.png"));
 
-    final AtomicReference<JRadioButtonMenuItem> localHostButton = new AtomicReference<>();
     final AtomicInteger ntpErrorCounter = new AtomicInteger(MAX_NTP_ERROR_COUNTER);
+
+    final Runnable activateFirstNtpSource =
+        () -> Arrays.stream(menuSourceNtpServer.getMenuComponents())
+            .filter(x -> x instanceof JRadioButtonMenuItem)
+            .map(x -> (JRadioButtonMenuItem) x)
+            .findFirst()
+            .ifPresent(AbstractButton::doClick);
 
     for (final NtpTimeSource timeSource : NTP_TIME_SOURCES) {
       if (timeSource instanceof NtpTimeSourceSectionHeader) {
@@ -384,7 +414,6 @@ public final class AppFrame extends JFrame {
         menuSourceNtpServer.add(radioButtonMenuItem);
 
         if ("localhost".equalsIgnoreCase(timeSource.address)) {
-          localHostButton.set(radioButtonMenuItem);
           radioButtonMenuItem.addActionListener(l -> {
             AppFrame.this.setTitle(TITLE);
             System.out.println("Selected time source: " + timeSource);
@@ -446,10 +475,7 @@ public final class AppFrame extends JFrame {
                         JOptionPane.showMessageDialog(AppFrame.this,
                             "Can't initialize NTP client", "Error",
                             JOptionPane.ERROR_MESSAGE);
-                        final JRadioButtonMenuItem localhostButton = localHostButton.get();
-                        if (localhostButton != null) {
-                          localhostButton.doClick();
-                        }
+                        activateFirstNtpSource.run();
                       });
                       time = System.currentTimeMillis();
                     } else {
@@ -466,10 +492,7 @@ public final class AppFrame extends JFrame {
                                 "Can't get NTP packets from " + timeSource.address + ": " +
                                     ex.getMessage(), "Can't get NTP packets",
                                 JOptionPane.WARNING_MESSAGE);
-                            final JRadioButtonMenuItem localhostButton = localHostButton.get();
-                            if (localhostButton != null) {
-                              localhostButton.doClick();
-                            }
+                            activateFirstNtpSource.run();
                           });
                         }
                         time = System.currentTimeMillis();
@@ -537,13 +560,16 @@ public final class AppFrame extends JFrame {
     });
 
     menuBar.add(menuFile);
+    menuBar.add(menuMode);
     menuBar.add(menuSettings);
     menuBar.add(menuHelp);
 
-    final JRadioButtonMenuItem localHostButtonMenuItem = localHostButton.get();
-    if (localHostButtonMenuItem != null) {
-      localHostButtonMenuItem.doClick();
-    }
+    activateFirstNtpSource.run();
+
+    Arrays.stream(menuMode.getMenuComponents())
+        .filter(x -> x instanceof JRadioButtonMenuItem)
+        .findFirst()
+        .ifPresent(x -> ((JRadioButtonMenuItem) x).doClick());
 
     return menuBar;
   }
@@ -572,6 +598,23 @@ public final class AppFrame extends JFrame {
     public NtpTimeSourceSectionHeader(final String name) {
       super(name, null);
     }
+  }
+
+  private static class Mode {
+    private final String name;
+    private final String toolTip;
+    private final MinuteBasedTimeSignalWavRenderer renderer;
+
+    Mode(
+        final String name,
+        final String toolTip,
+        final MinuteBasedTimeSignalWavRenderer renderer
+    ) {
+      this.name = name;
+      this.toolTip = toolTip;
+      this.renderer = renderer;
+    }
+
   }
 
   private static class NtpTimeSource {
