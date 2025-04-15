@@ -14,11 +14,21 @@ public class TimePanel extends javax.swing.JPanel {
 
   private final JLabel labelCest;
   private final JLabel labelTimeDate;
-  private final Supplier<ZonedDateTime> timeSupplier;
+  private final Supplier<TimeDateIndicationProvider> timeSupplier;
   private boolean showSecondsChange = true;
 
-  public TimePanel(final Supplier<ZonedDateTime> timeSupplier) {
-    this.timeSupplier = timeSupplier == null ? ZonedDateTime::now : timeSupplier;
+  public TimePanel(final Supplier<TimeDateIndicationProvider> timeSupplier) {
+    this.timeSupplier = timeSupplier == null ? () -> new TimeDateIndicationProvider() {
+      @Override
+      public ZonedDateTime getZonedTimeDateNow() {
+        return ZonedDateTime.now();
+      }
+
+      @Override
+      public String getIndicationText() {
+        return "NULL";
+      }
+    } : timeSupplier;
 
     GridBagConstraints gbc;
 
@@ -66,7 +76,13 @@ public class TimePanel extends javax.swing.JPanel {
 
   public void refreshTime() {
     final Runnable runnable = () -> {
-      final ZonedDateTime time = this.timeSupplier.get();
+      final TimeDateIndicationProvider provider = this.timeSupplier.get();
+      if (provider == null) {
+        this.labelTimeDate.setText("--:-- ------------");
+        this.labelCest.setText("....");
+        return;
+      }
+      final ZonedDateTime time = provider.getZonedTimeDateNow();
 
       final int hours = time.getHour();
       final int minute = time.getMinute();
@@ -84,8 +100,7 @@ public class TimePanel extends javax.swing.JPanel {
           String.format("%02d%s%02d %04d-%s-%02d", hours, sec, minute, year, month, date);
 
       this.labelTimeDate.setText(timeText);
-      this.labelCest.setText(
-          time.getZone().getRules().isDaylightSavings(time.toInstant()) ? "CEST" : "CET");
+      this.labelCest.setText(provider.getIndicationText());
 
       this.labelTimeDate.repaint();
       this.labelCest.repaint();

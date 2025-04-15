@@ -135,8 +135,7 @@ public final class AppFrame extends JFrame {
     this.currentMixer.set(findDefaultOutputMixer());
     this.appPanel = new AppPanel(
         this.currentMixer::get,
-        this::getCurrentMinuteWavDataRenderer,
-        () -> ZonedDateTime.ofInstant(this.currentTime.get(), UTC)
+        this::getCurrentMinuteWavDataRenderer
     );
     this.setJMenuBar(this.makeMenuBar());
     this.setContentPane(this.appPanel);

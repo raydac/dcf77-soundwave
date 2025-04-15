@@ -51,21 +51,22 @@ public class AppPanel extends JPanel {
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
   private final SignalProgressBar progressBarTime;
   private final AppPanelToggleButton buttonCustomTime;
-  private final Supplier<ZonedDateTime> baseTimeSupplier;
+  private final Supplier<? extends TimeDateIndicationProvider>
+      baseTimeDateIndicationProviderSupplier;
   private final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier;
-  private volatile Supplier<ZonedDateTime> currentTimeSupplier;
+  private volatile Supplier<? extends TimeDateIndicationProvider>
+      currentTimeDateIndicationProviderSupplier;
 
   public AppPanel(
       final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
-      final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier,
-      final Supplier<ZonedDateTime> timeSupplier
+      final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier
   ) {
     super(new BorderLayout(0, 0));
     this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
-    this.baseTimeSupplier = requireNonNull(timeSupplier);
-    this.currentTimeSupplier = this.baseTimeSupplier;
+    this.baseTimeDateIndicationProviderSupplier = minuteWavDataRendererSupplier;
+    this.currentTimeDateIndicationProviderSupplier = this.baseTimeDateIndicationProviderSupplier;
     this.mixerSupplier = requireNonNull(mixerSupplier);
-    this.timePanel = new TimePanel(() -> this.currentTimeSupplier.get());
+    this.timePanel = new TimePanel(() -> this.currentTimeDateIndicationProviderSupplier.get());
     this.timePanel.setBackground(TIME_PANEL_NORMAL);
     this.progressBarTime = new SignalProgressBar();
 
@@ -117,12 +118,23 @@ public class AppPanel extends JPanel {
         if (selected == null) {
           this.buttonCustomTime.setSelected(false);
         } else {
-          this.currentTimeSupplier = () -> selected;
+          this.currentTimeDateIndicationProviderSupplier = () -> new TimeDateIndicationProvider() {
+            @Override
+            public ZonedDateTime getZonedTimeDateNow() {
+              return selected;
+            }
+
+            @Override
+            public String getIndicationText() {
+              return "CUSTOM";
+            }
+          };
           this.timePanel.setShowSecondsChange(false);
           this.timePanel.setBackground(TIME_PANEL_FIXED);
         }
       } else {
-        this.currentTimeSupplier = this.baseTimeSupplier;
+        this.currentTimeDateIndicationProviderSupplier =
+            this.baseTimeDateIndicationProviderSupplier;
         this.timePanel.setShowSecondsChange(true);
         this.timePanel.setBackground(TIME_PANEL_NORMAL);
       }
@@ -219,7 +231,7 @@ public class AppPanel extends JPanel {
   }
 
   public ZonedDateTime getCurrentTime() {
-    return this.currentTimeSupplier.get();
+    return this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow();
   }
 
   public void dispose() {
@@ -236,8 +248,8 @@ public class AppPanel extends JPanel {
     final MinuteBasedTimeSignalWavRenderer minuteRenderer =
         this.minuteWavDataRendererSupplier.get();
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime =
-          this.currentTimeSupplier.get().withZoneSameInstant(UTC);
+      ZonedDateTime zonedDateTime = this.currentTimeDateIndicationProviderSupplier.get()
+          .getZonedTimeDateNow();
       boolean addedSuccessfully = true;
       for (int i = 0;
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&

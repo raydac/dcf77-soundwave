@@ -1,9 +1,10 @@
 package com.igormaznitsa.soundtime;
 
+import com.igormaznitsa.gui.TimeDateIndicationProvider;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public interface MinuteBasedTimeSignalWavRenderer {
+public interface MinuteBasedTimeSignalWavRenderer extends TimeDateIndicationProvider {
 
   byte[] makeMinuteWavData(
       boolean secondsAwareness,
