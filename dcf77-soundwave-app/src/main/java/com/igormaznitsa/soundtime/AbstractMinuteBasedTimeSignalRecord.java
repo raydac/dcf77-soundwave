@@ -58,6 +58,29 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
   }
 
   /**
+   * Make BCD value with padded 5 bit
+   *
+   * @param value value to be encoded
+   * @return encoded value
+   */
+  public static int toBcdPadded5(int value) {
+    return (((value / 100) % 10) << 10) | (((value / 10) % 10) << 5) | (value % 10);
+  }
+
+  /**
+   * Make BCD value with padded 5 bit
+   *
+   * @param value value to be encoded
+   * @return encoded value
+   */
+  public static int fromBcdPadded5(int bcd5value) {
+    final int a = bcd5value & 0xF;
+    final int b = (bcd5value >> 5) & 0xF;
+    final int c = (bcd5value >> 10) & 0xF;
+    return c * 100 + b * 10 + a;
+  }
+
+  /**
    * Decode BCD value as integer.
    *
    * @param bcdValue BCD value.
@@ -111,6 +134,30 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
   }
 
   public abstract boolean isValid();
+
+  protected static long setValue(
+      final long data,
+      final long value,
+      final int shift,
+      final long mask,
+      final boolean msb0
+  ) {
+    long x;
+    if (mask != 1L && msb0) {
+      int maskBitsCount = 0;
+      long tempMask = mask;
+      while (tempMask != 0L) {
+        maskBitsCount++;
+        tempMask >>>= 1;
+      }
+      x = reverseLowestBits(value, maskBitsCount);
+    } else {
+      x = value;
+    }
+
+    final long shiftedMaskedValue = (x & mask) << shift;
+    return (data & ~(mask << shift)) | shiftedMaskedValue;
+  }
 
   /**
    * Record as bit string, 60 bits.

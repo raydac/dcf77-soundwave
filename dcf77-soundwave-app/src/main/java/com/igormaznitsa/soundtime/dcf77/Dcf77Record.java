@@ -14,7 +14,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
   /**
    * Standard time zone for DCF77 signal.
    */
-  public static final ZoneId ZONE_CET = ZoneId.of("CET");
+  static final ZoneId ZONE_CET = ZoneId.of("CET");
 
   /**
    * Create record for now.
@@ -149,30 +149,6 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
     return time.withZoneSameInstant(ZONE_CET);
   }
 
-  private static long setValue(
-      final long data,
-      final long value,
-      final int shift,
-      final long mask,
-      final boolean msb0
-  ) {
-    long x;
-    if (mask != 1L && msb0) {
-      int maskBitsCount = 0;
-      long tempMask = mask;
-      while (tempMask != 0L) {
-        maskBitsCount++;
-        tempMask >>>= 1;
-      }
-      x = reverseLowestBits(value, maskBitsCount);
-    } else {
-      x = value;
-    }
-
-    final long shiftedMaskedValue = (x & mask) << shift;
-    return (data & ~(mask << shift)) | shiftedMaskedValue;
-  }
-
   @Override
   public String toString() {
     final StringBuilder stringBuilder = new StringBuilder(this.getClass().getSimpleName());
@@ -220,9 +196,9 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
   }
 
   /**
-   * Return summer time announcement.
+   * Return summer announcement.
    *
-   * @return summer time announcement
+   * @return summer announcement
    */
   public boolean isSummerTimeAnnouncement() {
     return bits(this.getRawBitString(), 16, 1L) != 0L;

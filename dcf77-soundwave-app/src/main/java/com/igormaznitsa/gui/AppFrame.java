@@ -6,6 +6,7 @@ import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import com.igormaznitsa.soundtime.dcf77.Dcf77MinuteBasedTimeSignalSignalRenderer;
+import com.igormaznitsa.soundtime.jjy.JjyMinuteBasedTimeSignalSignalRenderer;
 import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -101,7 +102,7 @@ public final class AppFrame extends JFrame {
       new Mode("DCF77", "German long-wave time signal and standard-frequency radio station",
           Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
       new Mode("JJY", "Japan low frequency time signal radio station",
-          Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
+          JjyMinuteBasedTimeSignalSignalRenderer.INSTANCE),
       new Mode("WWVB", "North America low frequency time signal radio station",
           Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE)
   );

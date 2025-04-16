@@ -1,22 +1,21 @@
-package com.igormaznitsa.soundtime.dcf77;
+package com.igormaznitsa.soundtime.jjy;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
-import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSignalWavRenderer {
+public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSignalWavRenderer {
 
-  public static final Dcf77MinuteBasedTimeSignalSignalRenderer
-      INSTANCE = new Dcf77MinuteBasedTimeSignalSignalRenderer();
+  public static final JjyMinuteBasedTimeSignalSignalRenderer
+      INSTANCE = new JjyMinuteBasedTimeSignalSignalRenderer();
   /**
    * Standard amplitude deviation for DCF77 amplitude modulation.
    */
-  public static final double DCF77_STANDARD_AMPLITUDE_DEVIATION = 0.85d;
-  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(12916, 15500, 19375);
+  public static final double JJY_STANDARD_AMPLITUDE_DEVIATION = 0.90d;
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8000, 13333, 20000);
 
   @Override
   public List<Integer> getAllowedCarrierFrequences() {
@@ -25,12 +24,12 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
 
   @Override
   public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
-    return new Dcf77Record(zonedDateTime);
+    return new JjyRecord(zonedDateTime);
   }
 
   @Override
   public double getAmplitudeDeviation() {
-    return DCF77_STANDARD_AMPLITUDE_DEVIATION;
+    return JJY_STANDARD_AMPLITUDE_DEVIATION;
   }
 
   @Override
@@ -42,8 +41,9 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
       final int sampleBytes,
       final AmplitudeSoundSignalRenderer.SignalShape signalShape,
       final double amplitudeDeviation) {
-    final int samplesPerSet = sampleRate / 5;
-    final int samplesPerReset = sampleRate / 10;
+    final int samplesPerMarker = sampleRate / 5;
+    final int samplesPerSet = sampleRate / 2;
+    final int samplesPerReset = (sampleRate << 2) / 5;
 
     long data = minuteBitStringProvider.getBitString(false);
 
@@ -56,8 +56,9 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
     for (int i = second; i < 60; i++) {
       final boolean bitState = ((data >>> i) & 1L) != 0L;
       final int syncPrefixSamples;
-      if (i == 59) {
-        syncPrefixSamples = -1;
+      if (i == 0 || i % 10 == 9) {
+        // marker
+        syncPrefixSamples = samplesPerMarker;
       } else {
         syncPrefixSamples = bitState ? samplesPerSet : samplesPerReset;
       }
@@ -66,9 +67,9 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
       while (sampleCounter < sampleRate) {
         final double amplitude;
         if (sampleCounter <= syncPrefixSamples) {
-          amplitude = 1.0d - amplitudeDeviation;
-        } else {
           amplitude = 1.0d;
+        } else {
+          amplitude = 1.0d - amplitudeDeviation;
         }
         final long volume = signalShape.calculate(sampleIndex, freq, amplitude, sampleRate);
         wavBuffer[sampleIndex++] = (byte) (volume & 0xFF);
@@ -82,11 +83,11 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
 
   @Override
   public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(Dcf77Record.ZONE_CET);
+    return ZonedDateTime.now(JjyRecord.ZONE_JST);
   }
 
   @Override
   public String getIndicationText() {
-    return Dcf77Record.ZONE_CET.getRules().isDaylightSavings(Instant.now()) ? "CEST" : "CET";
+    return "JST";
   }
 }

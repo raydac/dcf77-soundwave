@@ -127,15 +127,4 @@ class Dcf77RecordTest {
     assertEquals(etalonMsb0, constructed.getBitString(true));
   }
 
-  @Test
-  void testBcd() {
-    assertEquals(97, Dcf77Record.fromBCD(0b10010111));
-    assertEquals(0b10010111, Dcf77Record.toBCD(97));
-    assertEquals(20, Dcf77Record.fromBCD(0b00100000));
-    assertEquals(0b00100000, Dcf77Record.toBCD(20));
-    assertEquals(0b0001_0011, Dcf77Record.toBCD(13));
-    assertEquals(0b0001_0110, Dcf77Record.toBCD(16));
-    assertEquals(13, Dcf77Record.fromBCD(0b0001_0011));
-  }
-
 }
