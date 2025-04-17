@@ -17,7 +17,7 @@
         <embedded.jdk.type>jdk</embedded.jdk.type>
         <embedded.jdk.version>24.0.1+11</embedded.jdk.version>
         <app.name>${project.build.finalName}</app.name>
-        <app.version.raw>1.0.2</app.version.raw>
+        <app.version.raw>1.1.0</app.version.raw>
         <final.ext></final.ext>
         <executable.jar>false</executable.jar>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -130,7 +130,7 @@
                                 <mutexName>dcf77soundwave</mutexName>
                             </singleInstance>
                             <versionInfo>
-                                <fileVersion>${app.version.raw}1.0.2.0</fileVersion>
+                                <fileVersion>${app.version.raw}.0</fileVersion>
                                 <productVersion>${app.version.raw}.0</productVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
                                 <fileDescription>DCF77Soundwave generator of CET signal</fileDescription>
