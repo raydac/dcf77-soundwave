@@ -38,12 +38,12 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
         ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
         !ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
         false,
-        toBCD(ensureCet(time).getMinute()),
-        toBCD(ensureCet(time).getHour()),
-        toBCD(ensureCet(time).getDayOfMonth()),
-        toBCD(ensureCet(time).getDayOfWeek().getValue()),
-        toBCD(ensureCet(time).getMonthValue()),
-        toBCD(ensureCet(time).getYear() % 100)
+        toBCD(ensureTimezone(time, ZONE_CET).getMinute()),
+        toBCD(ensureTimezone(time, ZONE_CET).getHour()),
+        toBCD(ensureTimezone(time, ZONE_CET).getDayOfMonth()),
+        toBCD(ensureTimezone(time, ZONE_CET).getDayOfWeek().getValue()),
+        toBCD(ensureTimezone(time, ZONE_CET).getMonthValue()),
+        toBCD(ensureTimezone(time, ZONE_CET).getYear() % 100)
     );
   }
 
@@ -121,32 +121,25 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
       final int bcdMonthNumber,
       final int bcdYearWithinCentury
   ) {
-    long data = setValue(0L, civilWarningBits, 1, 0b11111111111111L, msb0);
-    data = setValue(data, callBit ? 1L : 0L, 15, 1L, msb0);
-    data = setValue(data, summerTimeAnnouncement ? 1L : 0L, 16, 1L, msb0);
-    data = setValue(data, cest ? 1L : 0L, 17, 1L, msb0);
-    data = setValue(data, cet ? 1L : 0L, 18, 1L, msb0);
-    data = setValue(data, leapSecondAnnouncement ? 1L : 0L, 19, 1L, msb0);
-    data = setValue(data, 1L, 20, 1L, msb0);
-    data = setValue(data, bcdMinutes, 21, 0b111_111_1L, msb0);
-    data = setValue(data, bcdHours, 29, 0b111_111L, msb0);
-    data = setValue(data, bcdDayOfMonth, 36, 0b111_111L, msb0);
-    data = setValue(data, bcdDayOfWeek, 42, 0b111L, msb0);
-    data = setValue(data, bcdMonthNumber, 45, 0b11111L, msb0);
-    data = setValue(data, bcdYearWithinCentury, 50, 0b1111_1111L, msb0);
+    long data = setBits(0L, civilWarningBits, 1, 0b11111111111111L, msb0);
+    data = setBits(data, callBit ? 1L : 0L, 15, 1L, msb0);
+    data = setBits(data, summerTimeAnnouncement ? 1L : 0L, 16, 1L, msb0);
+    data = setBits(data, cest ? 1L : 0L, 17, 1L, msb0);
+    data = setBits(data, cet ? 1L : 0L, 18, 1L, msb0);
+    data = setBits(data, leapSecondAnnouncement ? 1L : 0L, 19, 1L, msb0);
+    data = setBits(data, 1L, 20, 1L, msb0);
+    data = setBits(data, bcdMinutes, 21, 0b111_111_1L, msb0);
+    data = setBits(data, bcdHours, 29, 0b111_111L, msb0);
+    data = setBits(data, bcdDayOfMonth, 36, 0b111_111L, msb0);
+    data = setBits(data, bcdDayOfWeek, 42, 0b111L, msb0);
+    data = setBits(data, bcdMonthNumber, 45, 0b11111L, msb0);
+    data = setBits(data, bcdYearWithinCentury, 50, 0b1111_1111L, msb0);
 
-    data = setValue(data, calcEvenParity(data, 21, 28) ? 1L : 0L, 28, 1L, msb0);
-    data = setValue(data, calcEvenParity(data, 29, 35) ? 1L : 0L, 35, 1L, msb0);
-    data = setValue(data, calcEvenParity(data, 36, 58) ? 1L : 0L, 58, 1L, msb0);
+    data = setBits(data, calcEvenParityOverBits(data, 21, 28) ? 1L : 0L, 28, 1L, msb0);
+    data = setBits(data, calcEvenParityOverBits(data, 29, 35) ? 1L : 0L, 35, 1L, msb0);
+    data = setBits(data, calcEvenParityOverBits(data, 36, 58) ? 1L : 0L, 58, 1L, msb0);
 
     return data;
-  }
-
-  public static ZonedDateTime ensureCet(final ZonedDateTime time) {
-    if (time.getZone().equals(ZONE_CET)) {
-      return time;
-    }
-    return time.withZoneSameInstant(ZONE_CET);
   }
 
   @Override
@@ -407,13 +400,13 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
       return false;
     }
 
-    if ((calcEvenParity(bitString, 21, 28) ? 1L : 0L) != bits(bitString, 28, 1L)) {
+    if ((calcEvenParityOverBits(bitString, 21, 28) ? 1L : 0L) != bits(bitString, 28, 1L)) {
       return false;
     }
-    if ((calcEvenParity(bitString, 29, 35) ? 1L : 0L) != bits(bitString, 35, 1L)) {
+    if ((calcEvenParityOverBits(bitString, 29, 35) ? 1L : 0L) != bits(bitString, 35, 1L)) {
       return false;
     }
-    return (calcEvenParity(bitString, 36, 58) ? 1L : 0L) == bits(bitString, 58, 1L);
+    return (calcEvenParityOverBits(bitString, 36, 58) ? 1L : 0L) == bits(bitString, 58, 1L);
   }
 
 }

@@ -24,7 +24,7 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
   @Override
   public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
-    return new JjyRecord(zonedDateTime);
+    return JjyRecord.makeWithAnnounceCallSignAwareness(zonedDateTime);
   }
 
   @Override

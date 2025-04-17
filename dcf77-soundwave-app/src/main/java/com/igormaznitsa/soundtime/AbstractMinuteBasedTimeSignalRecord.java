@@ -1,5 +1,7 @@
 package com.igormaznitsa.soundtime;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBasedTimeSignalBits {
@@ -68,10 +70,10 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
   }
 
   /**
-   * Make BCD value with padded 5 bit
+   * Decode BCD5 value
    *
-   * @param value value to be encoded
-   * @return encoded value
+   * @param bcd5value value to be decoded
+   * @return decoded value
    */
   public static int fromBcdPadded5(int bcd5value) {
     final int a = bcd5value & 0xF;
@@ -102,7 +104,7 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
     return value;
   }
 
-  protected static boolean calcEvenParity(final long data, final int from, final int to) {
+  protected static boolean calcEvenParityOverBits(final long data, final int from, final int to) {
     boolean result = false;
     for (int i = from; i < to; i++) {
       if (bits(data, i, 1L) != 0L) {
@@ -129,13 +131,14 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
     return acc;
   }
 
-  protected long getRawBitString() {
-    return this.bitString;
+  public static ZonedDateTime ensureTimezone(final ZonedDateTime time, final ZoneId zoneId) {
+    if (time.getZone().equals(zoneId)) {
+      return time;
+    }
+    return time.withZoneSameInstant(zoneId);
   }
 
-  public abstract boolean isValid();
-
-  protected static long setValue(
+  protected static long setBits(
       final long data,
       final long value,
       final int shift,
@@ -158,6 +161,12 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
     final long shiftedMaskedValue = (x & mask) << shift;
     return (data & ~(mask << shift)) | shiftedMaskedValue;
   }
+
+  protected long getRawBitString() {
+    return this.bitString;
+  }
+
+  public abstract boolean isValid();
 
   /**
    * Record as bit string, 60 bits.
