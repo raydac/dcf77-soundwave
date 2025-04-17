@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.igormaznitsa</groupId>
         <artifactId>dcf77-soundwave</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>dcf77-soundwave-app</artifactId>
@@ -15,7 +15,7 @@
     <properties>
         <embedded.jdk.provider>BELLSOFT</embedded.jdk.provider>
         <embedded.jdk.type>jdk</embedded.jdk.type>
-        <embedded.jdk.version>24+37</embedded.jdk.version>
+        <embedded.jdk.version>24.0.1+11</embedded.jdk.version>
         <app.name>${project.build.finalName}</app.name>
         <app.version.raw>1.0.2</app.version.raw>
         <final.ext></final.ext>
