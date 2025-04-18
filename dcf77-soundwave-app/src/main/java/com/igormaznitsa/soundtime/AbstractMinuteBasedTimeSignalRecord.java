@@ -1,5 +1,6 @@
 package com.igormaznitsa.soundtime;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -14,6 +15,10 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
   public AbstractMinuteBasedTimeSignalRecord(final long bitString) {
     this.bitString = bitString;
     this.hashCode = Objects.hashCode(this.bitString);
+  }
+
+  protected static int currentCentury() {
+    return (LocalDate.now().getYear() / 100) * 100;
   }
 
   protected static long bits(

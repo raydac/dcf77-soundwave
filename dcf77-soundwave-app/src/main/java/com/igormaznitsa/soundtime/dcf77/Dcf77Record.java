@@ -370,7 +370,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
   @Override
   public ZonedDateTime extractSourceTime() {
     return ZonedDateTime.of(
-        this.getYearWithinCentury() + 2000,
+        this.getYearWithinCentury() + currentCentury(),
         this.getMonth(),
         this.getDayOfMonth(),
         this.getHour(),

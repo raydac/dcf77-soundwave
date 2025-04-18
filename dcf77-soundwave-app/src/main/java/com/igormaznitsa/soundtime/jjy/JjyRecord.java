@@ -292,7 +292,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   @Override
   public ZonedDateTime extractSourceTime() {
     final LocalDate localDate =
-        LocalDate.ofYearDay(2000 + this.getYearInCentury(), this.getDayOfYear());
+        LocalDate.ofYearDay(currentCentury() + this.getYearInCentury(), this.getDayOfYear());
     final LocalTime localTime = LocalTime.of(this.getHour(), this.getMinute(), 0);
     return ZonedDateTime.of(localDate, localTime, ZONE_JST);
   }

@@ -14,9 +14,7 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
   public static final JjyMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new JjyMinuteBasedTimeSignalSignalRenderer();
-  /**
-   * Standard amplitude deviation for DCF77 amplitude modulation.
-   */
+
   public static final double JJY_STANDARD_AMPLITUDE_DEVIATION = 0.90d;
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8000, 13333, 20000);
 

@@ -7,6 +7,7 @@ import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import com.igormaznitsa.soundtime.dcf77.Dcf77MinuteBasedTimeSignalSignalRenderer;
 import com.igormaznitsa.soundtime.jjy.JjyMinuteBasedTimeSignalSignalRenderer;
+import com.igormaznitsa.soundtime.wwvb.WwvbMinuteBasedTimeSignalSignalRenderer;
 import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -104,7 +105,7 @@ public final class AppFrame extends JFrame {
       new Mode("JJY", "Japan low frequency time signal radio station",
           JjyMinuteBasedTimeSignalSignalRenderer.INSTANCE),
       new Mode("WWVB", "North America low frequency time signal radio station",
-          Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE)
+          WwvbMinuteBasedTimeSignalSignalRenderer.INSTANCE)
   );
 
   private static final FileFilter FILE_FILTER_WAV =
