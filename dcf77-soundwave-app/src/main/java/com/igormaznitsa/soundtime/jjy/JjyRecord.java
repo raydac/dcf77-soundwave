@@ -18,7 +18,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
         ensureTimezone(time, ZONE_JST).getHour(),
         ensureTimezone(time, ZONE_JST).getDayOfYear(),
         ensureTimezone(time, ZONE_JST).getYear() % 100,
-        ensureTimezone(time, ZONE_JST).getDayOfWeek().getValue() - 1,
+        ensureTimezone(time, ZONE_JST).getDayOfWeek().getValue() % 7,
         false,
         false
     );
@@ -62,7 +62,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   public JjyRecord(final long jjyBits, final boolean msb0) {
     super(msb0 ? reverseLowestBits(jjyBits, 60) : jjyBits);
-    this.callSignAnnouncementPacket = isCallSignAnnouncementMinute(this.getMinute());
+    this.callSignAnnouncementPacket = isCallSignAnnouncementMinute(this.getMinutes());
   }
 
   public static boolean isCallSignAnnouncementMinute(final int minute) {
@@ -171,7 +171,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
     return calcEvenParityOverBits(bitString, 1, 8) != this.isPA2();
   }
 
-  public int getMinute() {
+  public int getMinutes() {
     final long bitString = this.getRawBitString();
     return (int) (
         bits(bitString, 1, 1) * 40
@@ -184,7 +184,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
     );
   }
 
-  public int getHour() {
+  public int getHours() {
     final long bitString = this.getRawBitString();
     return (int) (
         bits(bitString, 12, 1) * 20
@@ -267,8 +267,8 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   public String toString() {
     final StringBuilder stringBuilder = new StringBuilder(this.getClass().getSimpleName());
     stringBuilder.append('(')
-        .append("minute=").append(this.getMinute())
-        .append(",hour=").append(this.getHour())
+        .append("minute=").append(this.getMinutes())
+        .append(",hour=").append(this.getHours())
         .append(",dayOfYear=").append(this.getDayOfYear())
         .append(",PA1=").append(this.isPA1() ? 1 : 0)
         .append(",PA2=").append(this.isPA2() ? 1 : 0);
@@ -293,7 +293,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   public ZonedDateTime extractSourceTime() {
     final LocalDate localDate =
         LocalDate.ofYearDay(currentCentury() + this.getYearInCentury(), this.getDayOfYear());
-    final LocalTime localTime = LocalTime.of(this.getHour(), this.getMinute(), 0);
+    final LocalTime localTime = LocalTime.of(this.getHours(), this.getMinutes(), 0);
     return ZonedDateTime.of(localDate, localTime, ZONE_JST);
   }
 }

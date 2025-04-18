@@ -19,7 +19,8 @@ public class AboutPanel extends JPanel {
         new JLabel(
             "<html>Version 1.1.0" +
                 "<hr>" +
-                "The application simulates a Central European Time station using the DCF77 protocol over the audio spectrum." +
+                "The application simulates a Central European Time station using the DCF77 protocol over the audio spectrum.<br>" +
+                "Also it emulates JJY and WWVB long wave signals." +
                 "<hr>©2025 Igor Maznitsa<br>" +
                 "Apache License 2.0<br>" +
                 "<a href=\"https://github.com/raydac/dcf77-soundwave\">https://github.com/raydac/dcf77-soundwave</a>" +
