@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
@@ -62,6 +63,8 @@ public class AppPanel extends JPanel {
       final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier
   ) {
     super(new BorderLayout(0, 0));
+    this.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
     this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
     this.baseTimeDateIndicationProviderSupplier = minuteWavDataRendererSupplier;
     this.currentTimeDateIndicationProviderSupplier = this.baseTimeDateIndicationProviderSupplier;
@@ -114,7 +117,9 @@ public class AppPanel extends JPanel {
 
     this.buttonCustomTime.addActionListener(e -> {
       if (this.buttonCustomTime.isSelected()) {
-        final ZonedDateTime selected = this.getSelectedTime();
+        final ZonedDateTime selected =
+            this.getSelectedTime(this.baseTimeDateIndicationProviderSupplier.get()
+                .getZonedTimeDateNow());
         if (selected == null) {
           this.buttonCustomTime.setSelected(false);
         } else {
@@ -291,8 +296,9 @@ public class AppPanel extends JPanel {
     thread.start();
   }
 
-  private ZonedDateTime getSelectedTime() {
+  private ZonedDateTime getSelectedTime(final ZonedDateTime now) {
     final DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.US);
+
     datePickerSettings.setVisibleTodayButton(true);
     datePickerSettings.setVisibleNextMonthButton(true);
     datePickerSettings.setVisiblePreviousMonthButton(true);
@@ -307,6 +313,9 @@ public class AppPanel extends JPanel {
     timePickerSettings.setInitialTimeToNow();
 
     DateTimePicker dateTimePicker = new DateTimePicker(datePickerSettings, timePickerSettings);
+
+    dateTimePicker.getDatePicker().setDate(now.toLocalDate());
+    dateTimePicker.getTimePicker().setTime(now.toLocalTime());
 
     if (JOptionPane.showConfirmDialog(this, dateTimePicker, "Select date time",
         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {

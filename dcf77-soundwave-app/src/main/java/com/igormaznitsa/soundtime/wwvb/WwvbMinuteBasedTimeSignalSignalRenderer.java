@@ -41,9 +41,9 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
       final int sampleBytes,
       final AmplitudeSoundSignalRenderer.SignalShape signalShape,
       final double amplitudeDeviation) {
-    final int samplesPerMarker = sampleRate / 5;
-    final int samplesPerSet = sampleRate / 2;
-    final int samplesPerReset = (sampleRate << 2) / 5;
+    final int samplesPerMarker = (sampleRate << 2) / 5;
+    final int samplesPerSetBit = sampleRate / 2;
+    final int samplesPerResetBit = sampleRate / 5;
 
     long data = minuteBitStringProvider.getBitString(false);
 
@@ -60,7 +60,7 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
         // marker
         syncPrefixSamples = samplesPerMarker;
       } else {
-        syncPrefixSamples = bitState ? samplesPerSet : samplesPerReset;
+        syncPrefixSamples = bitState ? samplesPerSetBit : samplesPerResetBit;
       }
 
       int sampleCounter = 0;

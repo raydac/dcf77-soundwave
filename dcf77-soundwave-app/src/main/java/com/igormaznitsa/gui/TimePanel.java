@@ -1,16 +1,23 @@
 package com.igormaznitsa.gui;
 
+import static javax.swing.BorderFactory.createBevelBorder;
+import static javax.swing.BorderFactory.createCompoundBorder;
+import static javax.swing.BorderFactory.createEmptyBorder;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
 
-public class TimePanel extends javax.swing.JPanel {
+public class TimePanel extends JPanel {
 
   private final JLabel labelCest;
   private final JLabel labelTimeDate;
@@ -18,6 +25,14 @@ public class TimePanel extends javax.swing.JPanel {
   private boolean showSecondsChange = true;
 
   public TimePanel(final Supplier<TimeDateIndicationProvider> timeSupplier) {
+    super(new GridBagLayout());
+    this.setBorder(
+        createCompoundBorder(
+            createBevelBorder(BevelBorder.LOWERED),
+            createEmptyBorder(16, 16, 16, 16)
+        )
+    );
+
     this.timeSupplier = timeSupplier == null ? () -> new TimeDateIndicationProvider() {
       @Override
       public ZonedDateTime getZonedTimeDateNow() {
@@ -36,8 +51,6 @@ public class TimePanel extends javax.swing.JPanel {
     labelCest = new JLabel();
 
     this.setBackground(new Color(0, 0, 66));
-    this.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 16, 16, 16));
-    this.setLayout(new java.awt.GridBagLayout());
 
     this.labelTimeDate.setFont(GuiUtils.FONT_DIGITAL.deriveFont(Font.PLAIN, 50));
     this.labelTimeDate.setForeground(new Color(255, 165, 0));
@@ -61,7 +74,7 @@ public class TimePanel extends javax.swing.JPanel {
     gbc.ipady = 16;
     gbc.anchor = GridBagConstraints.NORTHWEST;
     gbc.insets = new java.awt.Insets(16, 0, 0, 0);
-    add(labelCest, gbc);
+    this.add(labelCest, gbc);
 
     this.refreshTime();
   }
@@ -78,7 +91,7 @@ public class TimePanel extends javax.swing.JPanel {
     final Runnable runnable = () -> {
       final TimeDateIndicationProvider provider = this.timeSupplier.get();
       if (provider == null) {
-        this.labelTimeDate.setText("--:-- ------------");
+        this.labelTimeDate.setText("00:00 0000-AAA-00");
         this.labelCest.setText("....");
         return;
       }

@@ -131,7 +131,6 @@ public final class AppFrame extends JFrame {
 
   public AppFrame() {
     super(TITLE);
-
     this.setIconImages(loadAppIcons());
 
     this.currentMixer.set(findDefaultOutputMixer());
