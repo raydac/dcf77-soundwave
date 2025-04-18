@@ -1,6 +1,8 @@
 package com.igormaznitsa.gui;
 
 import static java.util.Objects.requireNonNull;
+import static javax.swing.BorderFactory.createEmptyBorder;
+import static javax.swing.BorderFactory.createEtchedBorder;
 
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import com.github.lgooddatepicker.components.DateTimePicker;
@@ -62,7 +64,7 @@ public class AppPanel extends JPanel {
       final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier
   ) {
     super(new BorderLayout(0, 0));
-    this.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+    this.setBorder(createEmptyBorder(8, 8, 8, 8));
 
     this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
     this.baseTimeDateIndicationProviderSupplier = minuteWavDataRendererSupplier;
@@ -93,6 +95,10 @@ public class AppPanel extends JPanel {
     this.add(bottomPanel, BorderLayout.SOUTH);
 
     final JPanel controlPanel = new JPanel(new GridLayout(4, 3));
+    controlPanel.setBorder(BorderFactory.createCompoundBorder(
+        createEmptyBorder(0, 8, 0, 0),
+        createEtchedBorder()
+    ));
 
     final Font defaultButtonFont = UIManager.getFont("Button.font");
 
