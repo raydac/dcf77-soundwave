@@ -1,5 +1,7 @@
 package com.igormaznitsa.soundtime.wwvb;
 
+import static com.igormaznitsa.soundtime.wwvb.WwvbRecord.DST_BEGINS_TODAY;
+import static com.igormaznitsa.soundtime.wwvb.WwvbRecord.DST_ENDS_TODAY;
 import static java.time.ZoneOffset.UTC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -75,7 +77,57 @@ class WwvbRecordTest {
     assertEquals(0.0f, record.getDut1(), 0.01f);
     assertFalse(record.isLeapYear());
     assertFalse(record.isLeapSecondAtEndOfMonth());
-    assertEquals(0b11, record.getDst());
+    assertEquals(WwvbRecord.DST_IN_EFFECT, record.getDst());
+  }
+
+  @Test
+  void testConstructorFromZonedDateTime_NoLeapYear_DST_starts() {
+    final WwvbRecord record = new WwvbRecord(ZonedDateTime.of(
+        2025,
+        Month.MARCH.getValue(),
+        9,
+        0,
+        10,
+        0,
+        0,
+        UTC
+    ));
+    assertTrue(record.isValid());
+
+    assertEquals(10, record.getMinutes());
+    assertEquals(0, record.getHours());
+    assertEquals(68, record.getDayOfYear());
+    assertEquals(25, record.getYearInCentury());
+    assertEquals(0, record.getDut1Sign());
+    assertEquals(0.0f, record.getDut1(), 0.01f);
+    assertFalse(record.isLeapYear());
+    assertFalse(record.isLeapSecondAtEndOfMonth());
+    assertEquals(DST_BEGINS_TODAY, record.getDst());
+  }
+
+  @Test
+  void testConstructorFromZonedDateTime_NoLeapYear_DST_ends() {
+    final WwvbRecord record = new WwvbRecord(ZonedDateTime.of(
+        2025,
+        Month.NOVEMBER.getValue(),
+        2,
+        0,
+        10,
+        0,
+        0,
+        UTC
+    ));
+    assertTrue(record.isValid());
+
+    assertEquals(10, record.getMinutes());
+    assertEquals(0, record.getHours());
+    assertEquals(306, record.getDayOfYear());
+    assertEquals(25, record.getYearInCentury());
+    assertEquals(0, record.getDut1Sign());
+    assertEquals(0.0f, record.getDut1(), 0.01f);
+    assertFalse(record.isLeapYear());
+    assertFalse(record.isLeapSecondAtEndOfMonth());
+    assertEquals(DST_ENDS_TODAY, record.getDst());
   }
 
 }

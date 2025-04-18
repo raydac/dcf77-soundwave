@@ -8,11 +8,15 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.zone.ZoneRules;
 
 public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
 
-  private static final ZoneId ZONE_MOUNTAIN = ZoneId.of("US/Mountain");
+  public static final ZoneId ZONE_MOUNTAIN = ZoneId.of("US/Mountain");
+
+  public static final int DST_NOT_IN_EFFECT = 0b00;
+  public static final int DST_ENDS_TODAY = 0b01;
+  public static final int DST_BEGINS_TODAY = 0b10;
+  public static final int DST_IN_EFFECT = 0b11;
 
   public WwvbRecord(final ZonedDateTime time) {
     this(
@@ -24,7 +28,7 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
         ensureTimezone(time, UTC).getYear() % 100,
         ensureTimezone(time, UTC).toLocalDate().isLeapYear(),
         isLeapSecondAddedDuringTheMonth(ensureTimezone(time, UTC)),
-        calculateDst(ensureTimezone(time, UTC))
+        calculateDstStatus(ensureTimezone(time, UTC))
     );
   }
 
@@ -58,28 +62,56 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
     super(msb0 ? reverseLowestBits(wwvbBits, 60) : wwvbBits);
   }
 
-  public static int calculateDst(ZonedDateTime time) {
-    final ZonedDateTime zonedDateTime = time.withZoneSameInstant(ZONE_MOUNTAIN);
+  private static int calculateDstStatus(ZonedDateTime time) {
+    final ZonedDateTime zonedDateTime = ensureTimezone(time, UTC);
 
-    final LocalDate today = zonedDateTime.toLocalDate();
+    final int dstStatus;
+    switch (zonedDateTime.getMonth()) {
+      case JANUARY:
+      case FEBRUARY:
+      case DECEMBER:
+        dstStatus = DST_NOT_IN_EFFECT;
+        break;
+      case MARCH: {
+        final int dayOfWeek = zonedDateTime.getDayOfWeek().getValue() % 7; // 0 - sunday
+        final int dayOfMonth = zonedDateTime.getDayOfMonth();
+        final int sundays = (dayOfMonth + 6 - dayOfWeek) / 7;
 
-    final ZonedDateTime startOfToday = today.atStartOfDay(ZONE_MOUNTAIN);
-    final ZonedDateTime endOfToday = today.plusDays(1).atStartOfDay(ZONE_MOUNTAIN).minusNanos(1);
-
-    final ZoneRules rules = ZONE_MOUNTAIN.getRules();
-    final boolean isDST = rules.isDaylightSavings(zonedDateTime.toInstant());
-    final boolean wasDST = rules.isDaylightSavings(startOfToday.toInstant());
-    final boolean isDSTAtEnd = rules.isDaylightSavings(endOfToday.toInstant());
-
-    if (isDST) {
-      return 0b11;
-    } else if (wasDST && !isDSTAtEnd) {
-      return 0b01;
-    } else if (!wasDST && isDSTAtEnd) {
-      return 0b10;
-    } else {
-      return 0b00;
+        if (dayOfWeek == 0 && sundays == 2) {
+          dstStatus = DST_BEGINS_TODAY;
+        } else if (sundays >= 2) {
+          dstStatus = DST_IN_EFFECT;
+        } else {
+          dstStatus = DST_NOT_IN_EFFECT;
+        }
+      }
+      break;
+      case APRIL:
+      case MAY:
+      case JUNE:
+      case JULY:
+      case AUGUST:
+      case SEPTEMBER:
+      case OCTOBER:
+        dstStatus = DST_IN_EFFECT;
+        break;
+      case NOVEMBER: {
+        final int dayOfWeek = zonedDateTime.getDayOfWeek().getValue() % 7; // 0 - sunday
+        final int dayOfMonth = zonedDateTime.getDayOfMonth();
+        final int sundays = (dayOfMonth + 6 - dayOfWeek) / 7;
+        if (dayOfWeek == 0 && sundays == 1) {
+          dstStatus = DST_ENDS_TODAY;
+        } else if (sundays < 1) {
+          dstStatus = DST_IN_EFFECT;
+        } else {
+          dstStatus = DST_NOT_IN_EFFECT;
+        }
+      }
+      break;
+      default:
+        throw new IllegalArgumentException("Unexpected month " + zonedDateTime.getMonth());
     }
+    return dstStatus;
   }
 
   private static boolean isLeapSecondAddedDuringTheMonth(final ZonedDateTime time) {
