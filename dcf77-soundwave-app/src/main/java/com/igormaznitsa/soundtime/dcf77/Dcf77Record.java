@@ -367,12 +367,8 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
     return bits(this.getRawBitString(), 59, 1L) != 0L;
   }
 
-  /**
-   * Decode as zoned date time for CET zone. Year will be since 2000.
-   *
-   * @return decoded zoned date time in CET zone
-   */
-  public ZonedDateTime makeDateTime() {
+  @Override
+  public ZonedDateTime extractSourceTime() {
     return ZonedDateTime.of(
         this.getYearWithinCentury() + 2000,
         this.getMonth(),

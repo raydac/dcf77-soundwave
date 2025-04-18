@@ -9,6 +9,9 @@ import java.util.List;
 
 public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSignalWavRenderer {
 
+  private static final String MORSE_JJY_MSB0 =
+      "001011011011001011011011001101011011000101101101100101101101100110101101100";
+
   public static final JjyMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new JjyMinuteBasedTimeSignalSignalRenderer();
   /**
@@ -45,6 +48,8 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
     final int samplesPerSet = sampleRate / 2;
     final int samplesPerReset = (sampleRate << 2) / 5;
 
+    final boolean callSignPacket = JjyRecord.isCallSignAnnouncementMinute(
+        minuteBitStringProvider.extractSourceTime().getMinute());
     long data = minuteBitStringProvider.getBitString(false);
 
     final int second =
@@ -63,19 +68,41 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
         syncPrefixSamples = bitState ? samplesPerSet : samplesPerReset;
       }
 
-      int sampleCounter = 0;
-      while (sampleCounter < sampleRate) {
-        final double amplitude;
-        if (sampleCounter <= syncPrefixSamples) {
-          amplitude = 1.0d;
-        } else {
-          amplitude = 1.0d - amplitudeDeviation;
-        }
-        final long volume = signalShape.calculate(sampleIndex, freq, amplitude, sampleRate);
-        wavBuffer[sampleIndex++] = (byte) (volume & 0xFF);
-        wavBuffer[sampleIndex++] = (byte) ((volume >>> 8) & 0xFF);
+      if (callSignPacket && i > 39 && i < 49) {
+        // Call sign morse code
+        final int totalSignalSamples = 9 * sampleRate;
+        final double perBit = (double) MORSE_JJY_MSB0.length() / totalSignalSamples;
+        int sampleOffset = (i - 40) * sampleRate;
 
-        sampleCounter++;
+        for (int sample = 0; sample < sampleRate; sample++) {
+          final int morseBitIndex =
+              Math.min(MORSE_JJY_MSB0.length() - 1, (int) Math.round(perBit * sampleOffset));
+          final double amplitude;
+          if ((MORSE_JJY_MSB0.charAt(morseBitIndex)) == '0') {
+            amplitude = 0.0d;
+          } else {
+            amplitude = 1.0d;
+          }
+          final long volume = signalShape.calculate(sampleIndex, freq, amplitude, sampleRate);
+          wavBuffer[sampleIndex++] = (byte) (volume & 0xFF);
+          wavBuffer[sampleIndex++] = (byte) ((volume >>> 8) & 0xFF);
+          sampleOffset++;
+        }
+      } else {
+        int sampleCounter = 0;
+        while (sampleCounter < sampleRate) {
+          final double amplitude;
+          if (sampleCounter <= syncPrefixSamples) {
+            amplitude = 1.0d;
+          } else {
+            amplitude = 1.0d - amplitudeDeviation;
+          }
+          final long volume = signalShape.calculate(sampleIndex, freq, amplitude, sampleRate);
+          wavBuffer[sampleIndex++] = (byte) (volume & 0xFF);
+          wavBuffer[sampleIndex++] = (byte) ((volume >>> 8) & 0xFF);
+
+          sampleCounter++;
+        }
       }
     }
     return wavBuffer;

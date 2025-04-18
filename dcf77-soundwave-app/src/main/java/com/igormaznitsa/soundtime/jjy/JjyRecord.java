@@ -1,6 +1,8 @@
 package com.igormaznitsa.soundtime.jjy;
 
 import com.igormaznitsa.soundtime.AbstractMinuteBasedTimeSignalRecord;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -287,4 +289,11 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
     return stringBuilder.toString();
   }
 
+  @Override
+  public ZonedDateTime extractSourceTime() {
+    final LocalDate localDate =
+        LocalDate.ofYearDay(2000 + this.getYearInCentury(), this.getDayOfYear());
+    final LocalTime localTime = LocalTime.of(this.getHour(), this.getMinute(), 0);
+    return ZonedDateTime.of(localDate, localTime, ZONE_JST);
+  }
 }
