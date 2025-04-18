@@ -15,8 +15,8 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   public static final JjyMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new JjyMinuteBasedTimeSignalSignalRenderer();
 
-  public static final double JJY_STANDARD_AMPLITUDE_DEVIATION = 0.90d;
-  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8000, 13333, 20000);
+  public static final double JJY_STANDARD_AMPLITUDE_DEVIATION = 0.9d;
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(4100, 13333, 15900);
 
   @Override
   public List<Integer> getAllowedCarrierFrequences() {

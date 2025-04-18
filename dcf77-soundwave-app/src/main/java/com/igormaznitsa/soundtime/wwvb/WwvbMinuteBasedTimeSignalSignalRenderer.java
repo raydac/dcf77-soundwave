@@ -14,8 +14,8 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
   public static final WwvbMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new WwvbMinuteBasedTimeSignalSignalRenderer();
 
-  public static final double WWVB_STANDARD_AMPLITUDE_DEVIATION = 0.98d;
-  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(12000, 15900, 20000);
+  public static final double WWVB_STANDARD_AMPLITUDE_DEVIATION = 0.9d;
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8571, 15900, 20000);
 
   @Override
   public List<Integer> getAllowedCarrierFrequences() {
@@ -88,6 +88,6 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
 
   @Override
   public String getIndicationText() {
-    return "WWVB";
+    return "UTC";
   }
 }

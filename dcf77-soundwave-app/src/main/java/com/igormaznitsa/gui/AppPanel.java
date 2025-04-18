@@ -1,6 +1,5 @@
 package com.igormaznitsa.gui;
 
-import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNull;
 
 import com.github.lgooddatepicker.components.DatePickerSettings;
@@ -328,7 +327,7 @@ public class AppPanel extends JPanel {
           localTime.getHour(),
           localTime.getMinute(),
           localTime.getSecond(),
-          0, UTC);
+          0, now.getZone());
     }
     return null;
   }

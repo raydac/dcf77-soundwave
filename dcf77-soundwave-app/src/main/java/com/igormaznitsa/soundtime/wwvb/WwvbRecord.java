@@ -6,12 +6,9 @@ import com.igormaznitsa.soundtime.AbstractMinuteBasedTimeSignalRecord;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
-
-  public static final ZoneId ZONE_MOUNTAIN = ZoneId.of("US/Mountain");
 
   public static final int DST_NOT_IN_EFFECT = 0b00;
   public static final int DST_ENDS_TODAY = 0b01;
