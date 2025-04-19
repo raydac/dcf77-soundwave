@@ -5,6 +5,7 @@ import static java.time.ZoneOffset.UTC;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
+import com.igormaznitsa.soundtime.bpc.BpcMinuteBasedTimeSignalSignalRenderer;
 import com.igormaznitsa.soundtime.dcf77.Dcf77MinuteBasedTimeSignalSignalRenderer;
 import com.igormaznitsa.soundtime.jjy.JjyMinuteBasedTimeSignalSignalRenderer;
 import com.igormaznitsa.soundtime.wwvb.WwvbMinuteBasedTimeSignalSignalRenderer;
@@ -106,7 +107,9 @@ public final class AppFrame extends JFrame {
       new Mode("JJY", "Japan low frequency time signal radio station, JST time zone",
           JjyMinuteBasedTimeSignalSignalRenderer.INSTANCE),
       new Mode("WWVB", "North America low frequency time signal radio station, UTC time zone",
-          WwvbMinuteBasedTimeSignalSignalRenderer.INSTANCE)
+          WwvbMinuteBasedTimeSignalSignalRenderer.INSTANCE),
+      new Mode("BPC", " BPC Shangqiu low frequency time signal radio station, CHN time zone",
+          BpcMinuteBasedTimeSignalSignalRenderer.INSTANCE)
   );
 
   private static final FileFilter FILE_FILTER_WAV =
