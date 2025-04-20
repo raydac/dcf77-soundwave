@@ -68,9 +68,17 @@ If you are building it yourself from source, you will need to have [Apache Maven
 and [JDK 11+](https://bell-sw.com/pages/downloads/#jdk-21-lts) installed. In this case, the command line to build the
 distributions will be:
 
-```bash
-mvn clean install -Ppublish,appimage
-```
+- just to build the project
+
+  ```bash
+    mvn clean install
+  ```
+
+- build with distributes
+
+  ```bash
+    mvn clean install -Ppublish,appimage
+  ```
 
 It runs as a standard desktop GUI application, offering a user-friendly interface where you can select key parameters
 for signal generation. These include:
