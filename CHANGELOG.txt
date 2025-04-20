@@ -1,4 +1,7 @@
-1.0.1 (13-apr-2023)
+1.1.0 (20-apr-2025)
+ - added signal generators for WWVB, JJY and BCP time signal formats
+
+1.0.1 (13-apr-2025)
  - added set of NTP servers as time source
  - minor refactoring
 

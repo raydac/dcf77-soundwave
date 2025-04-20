@@ -15,6 +15,13 @@ Unfortunately, for those of us living in places like [Estonia](https://en.wikipe
 to distance and geographical interference. That was exactly my experience after getting a radio-controlled clock. I
 quickly realized that it wasn’t going to sync reliably with the official signal.
 
+Since 1.1.0 version, the application supports listed time signal formats:
+
+- __DCF77:__ German longwave time signal broadcast from Mainflingen, used mainly in Europe.
+- __JJY:__ Japanese time signal transmitted from two locations, covering Japan and nearby regions.
+- __WWVB:__ U.S. longwave time signal from Colorado, widely used in North America.
+- __BPC:__ Chinese time signal transmitted from Shangqiu, covering China and surrounding areas.
+
 ![DCF77 Europe map](assets/Europe_DCF77_de.jpg)
 
 I looked into existing mobile apps that claim to generate DCF77-compatible signals by simulating the time code
@@ -46,14 +53,14 @@ separately if you don’t want to.
 
 | OS                                           | Download link                                                                                                                                               | 
 |----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ![Windows](assets/icons/win64x64.png)        | __[Archive with JRE for Windows amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1-windows-jdk-amd64.zip)__ |
-| ![Windows](assets/icons/win64x64.png)        | __[Archive without JRE for Windows](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1.exe)__                      |
-| ![OSX](assets/icons/macos64x64.png)          | __[Archive with JRE for MacOS amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1-macos-jdk-amd64.zip)__     |
-| ![OSX Arm64](assets/icons/macosarm64x64.png) | __[Archive with JRE for MacOS arm64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1-macos-jdk-aarch64.zip)__   |
-| ![OSX](assets/icons/macos64x64.png)          | __[DMG package for MacOS (no JRE)](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app_1.0.1.dmg)__                       |
-| ![Linux](assets/icons/linux64x64.png)        | __[Archive with JRE for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1-linux-jdk-amd64.tar.gz)__  |
-| ![Linux](assets/icons/appimage64x64.png)     | __[AppImage for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1-x86_64.AppImage)__                 |
-| ![Java](assets/icons/java64x64.png)          | __[Cross-platform JAR file](https://github.com/raydac/dcf77-soundwave/releases/download/1.0.1/dcf77-soundwave-app-1.0.1.jar)__                              | 
+| ![Windows](assets/icons/win64x64.png)        | __[Archive with JRE for Windows amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0-windows-jdk-amd64.zip)__ |
+| ![Windows](assets/icons/win64x64.png)        | __[Archive without JRE for Windows](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0.exe)__                      |
+| ![OSX](assets/icons/macos64x64.png)          | __[Archive with JRE for MacOS amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0-macos-jdk-amd64.zip)__     |
+| ![OSX Arm64](assets/icons/macosarm64x64.png) | __[Archive with JRE for MacOS arm64](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0-macos-jdk-aarch64.zip)__   |
+| ![OSX](assets/icons/macos64x64.png)          | __[DMG package for MacOS (no JRE)](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app_1.1.0.dmg)__                       |
+| ![Linux](assets/icons/linux64x64.png)        | __[Archive with JRE for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0-linux-jdk-amd64.tar.gz)__  |
+| ![Linux](assets/icons/appimage64x64.png)     | __[AppImage for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0-x86_64.AppImage)__                 |
+| ![Java](assets/icons/java64x64.png)          | __[Cross-platform JAR file](https://github.com/raydac/dcf77-soundwave/releases/download/1.1.0/dcf77-soundwave-app-1.1.0.jar)__                              | 
 
 __[Full set of latest pre-built applications](https://github.com/raydac/dcf77-soundwave/releases/latest)__
 
