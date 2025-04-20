@@ -17,7 +17,7 @@ public class AboutPanel extends JPanel {
         new JLabel("<html><h2>DCF77 sound wave generator</h2></html>", JLabel.CENTER);
     final JLabel infoLabel =
         new JLabel(
-            "<html>Version 1.1.0" +
+            "<html>Version 1.1.1" +
                 "<hr>" +
                 "This application is designed to generate audio signals that emulate the time code transmissions<br>" +
                 "of several prominent longwave time signal stations: DCF77 (Germany), WWVB (USA), JJY (Japan), and BPC (China)." +

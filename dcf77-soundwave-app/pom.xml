@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.igormaznitsa</groupId>
         <artifactId>dcf77-soundwave</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dcf77-soundwave-app</artifactId>
@@ -17,7 +17,7 @@
         <embedded.jdk.type>jdk</embedded.jdk.type>
         <embedded.jdk.version>24.0.1+11</embedded.jdk.version>
         <app.name>${project.build.finalName}</app.name>
-        <app.version.raw>1.1.0</app.version.raw>
+        <app.version.raw>1.1.1</app.version.raw>
         <final.ext></final.ext>
         <executable.jar>false</executable.jar>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
