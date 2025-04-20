@@ -10,6 +10,7 @@ public class StartStopButton extends JToggleButton {
     this.setContentAreaFilled(false);
     this.setBorderPainted(false);
     this.setFocusPainted(false);
+    this.setFocusable(false);
 
     this.setRolloverEnabled(false);
 

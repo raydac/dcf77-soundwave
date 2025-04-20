@@ -15,7 +15,7 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
       INSTANCE = new WwvbMinuteBasedTimeSignalSignalRenderer();
 
   public static final double WWVB_STANDARD_AMPLITUDE_DEVIATION = 0.9d;
-  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8571, 15900, 20000);
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8571, 12000, 15000);
 
   @Override
   public List<Integer> getAllowedCarrierFrequences() {

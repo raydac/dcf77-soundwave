@@ -53,6 +53,9 @@ class WwvbRecordTest {
     assertTrue(record.isLeapYear());
     assertFalse(record.isLeapSecondAtEndOfMonth());
     assertEquals(0, record.getDst());
+
+    assertEquals(0b0_01100000_0_000000111_0_000000110_0_011000000_0_000000000_0_100001000_0L,
+        record.getBitString(true));
   }
 
   @Test

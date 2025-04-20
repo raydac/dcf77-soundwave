@@ -101,14 +101,15 @@ public final class AppFrame extends JFrame {
   );
 
   private static final List<Mode> MODES = List.of(
-      new Mode("DCF77",
+      new Mode("DCF77 (Germany)",
           "German long-wave time signal and standard-frequency radio station, CET time zone",
           Dcf77MinuteBasedTimeSignalSignalRenderer.INSTANCE),
-      new Mode("JJY", "Japan low frequency time signal radio station, JST time zone",
+      new Mode("JJY (Japan)", "Japan low frequency time signal radio station, JST time zone",
           JjyMinuteBasedTimeSignalSignalRenderer.INSTANCE),
-      new Mode("WWVB", "North America low frequency time signal radio station, UTC time zone",
+      new Mode("WWVB (USA)", "North America low frequency time signal radio station, UTC time zone",
           WwvbMinuteBasedTimeSignalSignalRenderer.INSTANCE),
-      new Mode("BPC", " BPC Shangqiu low frequency time signal radio station, CHN time zone",
+      new Mode("BPC (China)",
+          " BPC Shangqiu low frequency time signal radio station, CHN time zone",
           BpcMinuteBasedTimeSignalSignalRenderer.INSTANCE)
   );
 

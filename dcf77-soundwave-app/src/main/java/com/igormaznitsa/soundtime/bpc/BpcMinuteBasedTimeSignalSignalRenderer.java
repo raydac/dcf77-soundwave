@@ -15,8 +15,8 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   public static final BpcMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new BpcMinuteBasedTimeSignalSignalRenderer();
 
-  public static final double BPC_STANDARD_AMPLITUDE_DEVIATION = 0.9d;
-  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(9785, 13700, 24400);
+  public static final double BPC_STANDARD_AMPLITUDE_DEVIATION = 0.95d;
+  private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(11416, 13700, 17125);
 
   @Override
   public List<Integer> getAllowedCarrierFrequences() {
@@ -61,7 +61,7 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
       final int bitPair = bcpBitString.getBitPair(i);
 
       final int syncPrefixSamples;
-      if (i % 20 == 0) {
+      if (i == 19 || i == 39 || i == 59) {
         // marker
         syncPrefixSamples = samplesMarker;
       } else {
