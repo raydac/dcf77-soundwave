@@ -136,7 +136,9 @@ public class AppPanel extends JPanel {
 
             @Override
             public String getIndicationText() {
-              return "CUSTOM";
+              return "CUSTOM (" +
+                  AppPanel.this.baseTimeDateIndicationProviderSupplier.get().getIndicationText() +
+                  ')';
             }
           };
           this.timePanel.setShowSecondsChange(false);

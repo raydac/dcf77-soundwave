@@ -14,13 +14,13 @@ public class AboutPanel extends JPanel {
     super(new BorderLayout(5, 5));
 
     final JLabel titleLabel =
-        new JLabel("<html><h2>CET DCF77 sound wave</h2></html>", JLabel.CENTER);
+        new JLabel("<html><h2>DCF77 sound wave generator</h2></html>", JLabel.CENTER);
     final JLabel infoLabel =
         new JLabel(
             "<html>Version 1.1.0" +
                 "<hr>" +
-                "The application simulates a Central European Time station using the DCF77 protocol over the audio spectrum.<br>" +
-                "Also it emulates JJY and WWVB long wave signals." +
+                "This application is designed to generate audio signals that emulate the time code transmissions<br>" +
+                "of several prominent longwave time signal stations: DCF77 (Germany), WWVB (USA), JJY (Japan), and BPC (China)." +
                 "<hr>©2025 Igor Maznitsa<br>" +
                 "Apache License 2.0<br>" +
                 "<a href=\"https://github.com/raydac/dcf77-soundwave\">https://github.com/raydac/dcf77-soundwave</a>" +

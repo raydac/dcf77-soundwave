@@ -596,7 +596,8 @@ public final class AppFrame extends JFrame {
   }
 
   private void showAbout() {
-    JOptionPane.showMessageDialog(this, new AboutPanel(), "About", JOptionPane.PLAIN_MESSAGE);
+    JOptionPane.showMessageDialog(this, new AboutPanel(), "About", JOptionPane.PLAIN_MESSAGE,
+        GuiUtils.loadIcon("applogo64x64.png"));
   }
 
   private static class NtpTimeSourceSectionHeader extends NtpTimeSource {
