@@ -1,3 +1,7 @@
+1.1.1 (SNAPSHOT)
+ - updated dependencies
+ - updated embedded JDK to 24.0.2+12
+
 1.1.0 (20-apr-2025)
  - added signal generators for WWVB, JJY and BCP time signal formats
 

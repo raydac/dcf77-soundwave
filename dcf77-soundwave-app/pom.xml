@@ -15,7 +15,7 @@
     <properties>
         <embedded.jdk.provider>BELLSOFT</embedded.jdk.provider>
         <embedded.jdk.type>jdk</embedded.jdk.type>
-        <embedded.jdk.version>24.0.1+11</embedded.jdk.version>
+        <embedded.jdk.version>24.0.2+12</embedded.jdk.version>
         <app.name>${project.build.finalName}</app.name>
         <app.version.raw>1.1.1</app.version.raw>
         <final.ext></final.ext>
@@ -647,29 +647,29 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
+            <version>2.20.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.17.0</version>
+            <version>3.18.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.13.2</version>
+            <version>5.13.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.13.2</version>
+            <version>5.13.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.13.2</version>
+            <version>5.13.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
