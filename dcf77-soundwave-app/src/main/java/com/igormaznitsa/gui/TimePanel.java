@@ -100,7 +100,7 @@ public class TimePanel extends JPanel {
       final int hours = time.getHour();
       final int minute = time.getMinute();
       final int year = time.getYear();
-      final String month = time.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+      final String month = time.getMonth().getDisplayName(TextStyle.SHORT, Locale.ROOT);
       final int date = time.getDayOfMonth();
 
       final String sec;
