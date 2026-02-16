@@ -21,7 +21,7 @@ public class AboutPanel extends JPanel {
                 "<hr>" +
                 "This application is designed to generate audio signals that emulate the time code transmissions<br>" +
                 "of several prominent longwave time signal stations: DCF77 (Germany), WWVB (USA), JJY (Japan), and BPC (China)." +
-                "<hr>©2025 Igor Maznitsa<br>" +
+                "<hr>©2025-2026 Igor Maznitsa<br>" +
                 "Apache License 2.0<br>" +
                 "<a href=\"https://github.com/raydac/dcf77-soundwave\">https://github.com/raydac/dcf77-soundwave</a>" +
                 "<hr>" +
