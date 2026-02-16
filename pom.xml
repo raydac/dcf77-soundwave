@@ -6,7 +6,7 @@
     <groupId>com.igormaznitsa</groupId>
 
     <artifactId>dcf77-soundwave</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <description>Desktop application to emulate Central European Time DCF77 signal through sound channel.</description>

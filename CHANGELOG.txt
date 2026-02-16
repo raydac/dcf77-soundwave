@@ -1,3 +1,6 @@
+1.1.2 (SNAPSHOT)
+ -
+
 1.1.1 (16-feb-2026)
  - fixed a bug causing a 1-minute delay in precise time signal generation [#1](https://github.com/raydac/dcf77-soundwave/issues/1)
  - minor refactoring
