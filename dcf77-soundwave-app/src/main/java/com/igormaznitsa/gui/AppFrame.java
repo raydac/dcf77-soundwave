@@ -325,11 +325,15 @@ public final class AppFrame extends JFrame {
           new AmplitudeSoundSignalRenderer(minuteBasedTimeSignalWavRenderer, 120,
               this.appPanel.getSampleRate(),
               a -> null);
+
       ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(UTC)
+          .plusMinutes(1) // ensure upcoming minute
           .truncatedTo(ChronoUnit.MINUTES);
+
       final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
         recordList.add(minuteBasedTimeSignalWavRenderer.makeTimeSignalBits(time));
+        time = time.plusMinutes(1);
       }
       try {
         final byte[] wavData = renderer.renderWav(recordList, this.appPanel.getCarrierFreq(),

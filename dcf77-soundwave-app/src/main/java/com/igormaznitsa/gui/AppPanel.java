@@ -260,10 +260,12 @@ public class AppPanel extends JPanel {
   ) {
     final MinuteBasedTimeSignalWavRenderer minuteRenderer =
         this.minuteWavDataRendererSupplier.get();
+
     final Thread thread = new Thread(() -> {
       ZonedDateTime zonedDateTime = this.currentTimeDateIndicationProviderSupplier
           .get()
-          .getZonedTimeDateNow();
+          .getZonedTimeDateNow()
+          .plusMinutes(1); // ensure upcoming minute
 
       boolean addedSuccessfully = true;
 
@@ -273,6 +275,7 @@ public class AppPanel extends JPanel {
         addedSuccessfully &=
             renderer.offer(minuteRenderer.makeTimeSignalBits(zonedDateTime), freqHz,
                 this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
+
         zonedDateTime = zonedDateTime.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1);
       }
 
