@@ -23,6 +23,7 @@ class WwvbRecordTest {
     assertEquals(7, record.getHours());
     assertEquals(66, record.getDayOfYear());
     assertEquals(8, record.getYearInCentury());
+    assertEquals(0, record.getSecond());
     assertEquals(0b010, record.getDut1Sign());
     assertEquals(0.3f, record.getDut1(), 0.05f);
     assertTrue(record.isLeapYear());
@@ -38,7 +39,7 @@ class WwvbRecordTest {
         6,
         7,
         30,
-        0,
+        32,
         0,
         UTC
     ));
@@ -46,6 +47,7 @@ class WwvbRecordTest {
 
     assertEquals(30, record.getMinutes());
     assertEquals(7, record.getHours());
+    assertEquals(32, record.getSecond());
     assertEquals(66, record.getDayOfYear());
     assertEquals(8, record.getYearInCentury());
     assertEquals(0, record.getDut1Sign());
@@ -66,7 +68,7 @@ class WwvbRecordTest {
         18,
         7,
         30,
-        0,
+        44,
         0,
         UTC
     ));
@@ -77,6 +79,7 @@ class WwvbRecordTest {
     assertEquals(108, record.getDayOfYear());
     assertEquals(25, record.getYearInCentury());
     assertEquals(0, record.getDut1Sign());
+    assertEquals(44, record.getSecond());
     assertEquals(0.0f, record.getDut1(), 0.01f);
     assertFalse(record.isLeapYear());
     assertFalse(record.isLeapSecondAtEndOfMonth());
@@ -91,7 +94,7 @@ class WwvbRecordTest {
         9,
         0,
         10,
-        0,
+        11,
         0,
         UTC
     ));
@@ -102,6 +105,7 @@ class WwvbRecordTest {
     assertEquals(68, record.getDayOfYear());
     assertEquals(25, record.getYearInCentury());
     assertEquals(0, record.getDut1Sign());
+    assertEquals(11, record.getSecond());
     assertEquals(0.0f, record.getDut1(), 0.01f);
     assertFalse(record.isLeapYear());
     assertFalse(record.isLeapSecondAtEndOfMonth());
@@ -116,7 +120,7 @@ class WwvbRecordTest {
         2,
         0,
         10,
-        0,
+        32,
         0,
         UTC
     ));
@@ -127,6 +131,7 @@ class WwvbRecordTest {
     assertEquals(306, record.getDayOfYear());
     assertEquals(25, record.getYearInCentury());
     assertEquals(0, record.getDut1Sign());
+    assertEquals(32, record.getSecond());
     assertEquals(0.0f, record.getDut1(), 0.01f);
     assertFalse(record.isLeapYear());
     assertFalse(record.isLeapSecondAtEndOfMonth());

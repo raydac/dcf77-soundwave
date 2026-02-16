@@ -16,7 +16,8 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
         ensureTimezone(time, ZONE_CHN).getDayOfWeek().getValue(),
         ensureTimezone(time, ZONE_CHN).getDayOfMonth(),
         ensureTimezone(time, ZONE_CHN).getMonth().getValue(),
-        ensureTimezone(time, ZONE_CHN).getYear() % 100
+        ensureTimezone(time, ZONE_CHN).getYear() % 100,
+        time.getSecond()
     );
   }
 
@@ -26,9 +27,10 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
       final int dayOfWeek,
       final int dayOfMonth,
       final int month,
-      final int yearWithinCentury
+      final int yearWithinCentury,
+      final int second
   ) {
-    super(-1L);
+    super(-1L, second);
     this.bcpBitString = new BcpBitString(makeTimePacketVersion(
         hour,
         minute,
@@ -40,7 +42,7 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
   }
 
   public BpcRecord(final String bits) {
-    super(-1L);
+    super(-1L, 0);
     this.bcpBitString =
         new BcpBitString(bits);
   }
@@ -152,6 +154,10 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   @Override
   public boolean isValid() {
+    if (!super.isValid()) {
+      return false;
+    }
+
     if (this.bcpBitString.getBitPair(0) != 0
         || this.bcpBitString.getBitPair(20) != 1
         || this.bcpBitString.getBitPair(40) != 2
@@ -265,7 +271,7 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
         this.getDayOfMonth(),
         this.getHours() + (this.isPM() ? 12 : 0),
         this.getMinutes(),
-        0,
+        this.getSecond(),
         0,
         ZONE_CHN
     );

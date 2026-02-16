@@ -6,4 +6,6 @@ public interface MinuteBasedTimeSignalBits {
   long getBitString(boolean msb0);
 
   ZonedDateTime extractSourceTime();
+
+  int getSecond();
 }

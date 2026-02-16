@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -324,13 +325,14 @@ public final class AppFrame extends JFrame {
           new AmplitudeSoundSignalRenderer(minuteBasedTimeSignalWavRenderer, 120,
               this.appPanel.getSampleRate(),
               a -> null);
-      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(UTC);
+      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(UTC)
+          .truncatedTo(ChronoUnit.MINUTES);
       final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
         recordList.add(minuteBasedTimeSignalWavRenderer.makeTimeSignalBits(time));
       }
       try {
-        final byte[] wavData = renderer.renderWav(false, recordList, this.appPanel.getCarrierFreq(),
+        final byte[] wavData = renderer.renderWav(recordList, this.appPanel.getCarrierFreq(),
             minuteBasedTimeSignalWavRenderer.getAmplitudeDeviation(),
             this.appPanel.getSignalShape());
         FileUtils.writeByteArrayToFile(file, wavData);

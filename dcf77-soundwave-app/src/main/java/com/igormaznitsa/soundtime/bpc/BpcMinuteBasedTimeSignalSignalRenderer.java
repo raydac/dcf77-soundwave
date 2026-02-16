@@ -3,7 +3,6 @@ package com.igormaznitsa.soundtime.bpc;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -35,7 +34,6 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
   @Override
   public byte[] makeMinuteWavData(
-      final boolean secondsAwareness,
       final MinuteBasedTimeSignalBits minuteBitStringProvider,
       final double freq,
       final int sampleRate,
@@ -51,8 +49,7 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
     final BcpBitString bcpBitString = ((BpcRecord) minuteBitStringProvider).getBcpBitString();
 
-    final int second =
-        secondsAwareness ? LocalTime.now().getSecond() : 0;
+    final int second = minuteBitStringProvider.getSecond();
     final int totalSamples = sampleRate * (60 - second);
     final byte[] wavBuffer = new byte[totalSamples * sampleBytes];
 

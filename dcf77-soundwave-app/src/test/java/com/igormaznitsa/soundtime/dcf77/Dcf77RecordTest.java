@@ -21,6 +21,7 @@ class Dcf77RecordTest {
     assertEquals(time.getDayOfWeek().getValue(), dcf77Record.getDayOfWeek());
     assertEquals(time.getMonth().getValue(), dcf77Record.getMonth());
     assertEquals(time.getDayOfMonth(), dcf77Record.getDayOfMonth());
+    assertEquals(time.getSecond(), dcf77Record.getSecond());
   }
 
   @Test
@@ -116,6 +117,7 @@ class Dcf77RecordTest {
         false,
         true,
         false,
+        0,
         0b1100100,
         0b100000,
         0b010010,

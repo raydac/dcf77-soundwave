@@ -98,7 +98,6 @@ public class AmplitudeSoundSignalRenderer {
   /**
    * Render WAV file from record list.
    *
-   * @param secondsAwareness   if true then number of seconds will be calculated and packet won't be started from first one.
    * @param recordList         list of records
    * @param freqHz             carrier wave frequency in Hz.
    * @param amplitudeDeviation AM amplitude deviation.
@@ -107,7 +106,6 @@ public class AmplitudeSoundSignalRenderer {
    * @throws IOException if any problem during io operations.
    */
   public byte[] renderWav(
-      final boolean secondsAwareness,
       final List<MinuteBasedTimeSignalBits> recordList,
       final int freqHz,
       final double amplitudeDeviation,
@@ -117,13 +115,10 @@ public class AmplitudeSoundSignalRenderer {
       throw new IllegalArgumentException("Freq must be 0.." + this.sampleRate + ": " + freqHz);
     }
 
-    boolean seconds = secondsAwareness;
-
     final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     for (final MinuteBasedTimeSignalBits record : recordList) {
       buffer.writeBytes(
           this.minuteBasedTimeSignalWavRenderer.makeMinuteWavData(
-              seconds,
               record,
               freqHz,
               this.sampleRate,
@@ -131,7 +126,6 @@ public class AmplitudeSoundSignalRenderer {
               signalShape,
               amplitudeDeviation
           ));
-      seconds = false;
     }
     buffer.close();
     final byte[] wavData = buffer.toByteArray();
@@ -145,7 +139,6 @@ public class AmplitudeSoundSignalRenderer {
   }
 
   public boolean offer(
-      final boolean secondsAwareness,
       final MinuteBasedTimeSignalBits dataProvider,
       final int freqHz,
       final double amplitudeDeviation,
@@ -155,7 +148,6 @@ public class AmplitudeSoundSignalRenderer {
     }
 
     final byte[] rendered = minuteBasedTimeSignalWavRenderer.makeMinuteWavData(
-        secondsAwareness,
         requireNonNull(dataProvider),
         freqHz,
         this.sampleRate,

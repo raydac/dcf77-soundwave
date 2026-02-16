@@ -7,14 +7,21 @@ import java.util.Objects;
 
 public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBasedTimeSignalBits {
   /**
-   * Contains bit data of the record.
+   * Contains the bit data of the record.
    */
   private final long bitString;
-  private final int hashCode;
 
-  public AbstractMinuteBasedTimeSignalRecord(final long bitString) {
+  /**
+   * The second data to be kept separately.
+   */
+  private final int second;
+
+  public AbstractMinuteBasedTimeSignalRecord(final long bitString, final int second) {
+    if (second < 0 || second > 59) {
+      throw new IllegalArgumentException("Second part must be 0..59: " + second);
+    }
     this.bitString = bitString;
-    this.hashCode = Objects.hashCode(this.bitString);
+    this.second = second;
   }
 
   protected static int currentCentury() {
@@ -171,7 +178,9 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
     return this.bitString;
   }
 
-  public abstract boolean isValid();
+  public boolean isValid() {
+    return this.second >= 0 && this.second <= 59;
+  }
 
   /**
    * Record as bit string, 60 bits.
@@ -204,16 +213,22 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
       return false;
     }
     AbstractMinuteBasedTimeSignalRecord that = (AbstractMinuteBasedTimeSignalRecord) o;
-    return bitString == that.bitString;
+    return bitString == that.bitString && this.second == that.second;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(bitString, hashCode);
+    return Objects.hash(this.bitString, this.second);
   }
 
   @Override
   public long getBitString(boolean msb0) {
     return 0;
   }
+
+  @Override
+  public int getSecond() {
+    return this.second;
+  }
+
 }

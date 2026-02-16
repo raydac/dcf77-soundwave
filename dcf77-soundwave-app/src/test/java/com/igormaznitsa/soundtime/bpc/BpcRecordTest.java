@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class BpcRecordTest {
 
   @Test
-  void test() {
+  void testFromBitStrings() {
     BpcRecord record = new BpcRecord(
         "0000001101110001100101111000010100000000_0100001101110001100001111000010100000000_1000001101110001100001111000010100000000");
     assertTrue(record.isValid());
@@ -23,6 +23,7 @@ class BpcRecordTest {
     assertEquals(30, record.getDayOfMonth());
     assertEquals(1, record.getMonth());
     assertEquals(16, record.getYearInCentury());
+    assertEquals(0, record.getSecond());
 
     BpcRecord newRecord = new BpcRecord(record.extractSourceTime());
     assertEquals(
@@ -50,6 +51,8 @@ class BpcRecordTest {
     assertEquals(0b00, newRecord.getBcpBitString().getBitPair(18));
     assertEquals(0b00, newRecord.getBcpBitString().getBitPair(19));
     assertEquals(0b01, newRecord.getBcpBitString().getBitPair(20));
+    assertEquals(0, newRecord.getSecond());
+
   }
 
   @Test
@@ -61,12 +64,13 @@ class BpcRecordTest {
             9,
             9,
             15,
-            0,
+            23,
             0,
             ZONE_CHN
         )
     );
     assertTrue(record.isValid());
+    assertEquals(23, record.getSecond());
     assertEquals(
         "000010010011110010010010010011000100010001001001001111001000001001001100010001001000100100111100100000100100110001000100",
         record.toBinaryString(false));
@@ -78,12 +82,13 @@ class BpcRecordTest {
             2,
             14,
             38,
-            0,
+            12,
             0,
             ZONE_CHN
         )
     );
     assertTrue(record.isValid());
+    assertEquals(12, record.getSecond());
     assertEquals(
         "000000101001100101100000100111001010000001000010100110010111000010011100101000001000001010011001011100001001110010100000",
         record.toBinaryString(false));
@@ -100,6 +105,7 @@ class BpcRecordTest {
     assertEquals(15, record.getMinutes());
     assertEquals(4, record.getYearInCentury());
     assertEquals(2, record.getDayOfWeek());
+    assertEquals(0, record.getSecond());
     assertFalse(record.isPM());
     assertEquals(9, record.getDayOfMonth());
     assertEquals(3, record.getMonth());
@@ -116,6 +122,7 @@ class BpcRecordTest {
     assertEquals(38, record.getMinutes());
     assertEquals(10, record.getYearInCentury());
     assertEquals(5, record.getDayOfWeek());
+    assertEquals(0, record.getSecond());
     assertTrue(record.isPM());
     assertEquals(2, record.getDayOfMonth());
     assertEquals(7, record.getMonth());

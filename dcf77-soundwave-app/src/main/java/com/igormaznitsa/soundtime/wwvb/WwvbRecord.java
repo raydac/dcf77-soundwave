@@ -17,8 +17,9 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   public WwvbRecord(final ZonedDateTime time) {
     this(
-        ensureTimezone(time, UTC).getMinute(),
         ensureTimezone(time, UTC).getHour(),
+        ensureTimezone(time, UTC).getMinute(),
+        time.getSecond(),
         ensureTimezone(time, UTC).getDayOfYear(),
         0,
         0.0f,
@@ -30,8 +31,9 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
   }
 
   public WwvbRecord(
-      final int minute,
       final int hour,
+      final int minute,
+      final int second,
       final int dayOfYear,
       final int dut1sign,
       final float dut1,
@@ -51,12 +53,13 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
             leapYear,
             leapSecondAtEndOfMonth,
             dstStatus
-        )
+        ),
+        second
     );
   }
 
   public WwvbRecord(final long wwvbBits, final boolean msb0) {
-    super(msb0 ? reverseLowestBits(wwvbBits, 60) : wwvbBits);
+    super(msb0 ? reverseLowestBits(wwvbBits, 60) : wwvbBits, 0);
   }
 
   private static int calculateDstStatus(ZonedDateTime time) {
@@ -157,6 +160,10 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   @Override
   public boolean isValid() {
+    if (!super.isValid()) {
+      return false;
+    }
+
     final long bitString = this.getRawBitString();
     final long mustBeZero = bits(bitString, 0, 1L)
         | bits(bitString, 4, 1L)
@@ -278,7 +285,7 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
   public ZonedDateTime extractSourceTime() {
     final LocalDate localDate =
         LocalDate.ofYearDay(currentCentury() + this.getYearInCentury(), this.getDayOfYear());
-    final LocalTime localTime = LocalTime.of(this.getHours(), this.getMinutes(), 0);
+    final LocalTime localTime = LocalTime.of(this.getHours(), this.getMinutes(), this.getSecond());
     return ZonedDateTime.of(localDate, localTime, UTC);
   }
 }

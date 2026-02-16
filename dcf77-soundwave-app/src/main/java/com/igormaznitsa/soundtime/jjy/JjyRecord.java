@@ -14,8 +14,9 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   public JjyRecord(final ZonedDateTime time) {
     this(
-        ensureTimezone(time, ZONE_JST).getMinute(),
         ensureTimezone(time, ZONE_JST).getHour(),
+        ensureTimezone(time, ZONE_JST).getMinute(),
+        time.getSecond(),
         ensureTimezone(time, ZONE_JST).getDayOfYear(),
         ensureTimezone(time, ZONE_JST).getYear() % 100,
         ensureTimezone(time, ZONE_JST).getDayOfWeek().getValue() % 7,
@@ -25,8 +26,9 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   }
 
   public JjyRecord(
-      final int minute,
       final int hour,
+      final int minute,
+      final int second,
       final int dayOfYear,
       final int yearWithinCentury,
       final int dayOfWeek,
@@ -34,13 +36,14 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
       final boolean leapSecondAdded
   ) {
     super(makeTimePacketVersion1(minute, hour, dayOfYear, yearWithinCentury, dayOfWeek,
-        leapSecondAtCurrentUtcMonthEnd, leapSecondAdded));
+        leapSecondAtCurrentUtcMonthEnd, leapSecondAdded), second);
     this.callSignAnnouncementPacket = false;
   }
 
   public JjyRecord(
-      final int minute,
       final int hour,
+      final int minute,
+      final int second,
       final int dayOfYear,
       final int callSignAnnouncement,
       final int serviceInterruptionScheduled,
@@ -55,13 +58,13 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
             serviceInterruptionScheduled,
             serviceInterruptionDaytimeOnly,
             serviceInterruptionDuration
-        )
+        ), second
     );
     this.callSignAnnouncementPacket = true;
   }
 
   public JjyRecord(final long jjyBits, final boolean msb0) {
-    super(msb0 ? reverseLowestBits(jjyBits, 60) : jjyBits);
+    super(msb0 ? reverseLowestBits(jjyBits, 60) : jjyBits, 0);
     this.callSignAnnouncementPacket = isCallSignAnnouncementMinute(this.getMinutes());
   }
 
@@ -73,8 +76,9 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
     final ZonedDateTime jstTime = ensureTimezone(zonedDateTime, ZONE_JST);
     if (isCallSignAnnouncementMinute(jstTime.getMinute())) {
       return new JjyRecord(
-          jstTime.getMinute(),
           jstTime.getHour(),
+          jstTime.getMinute(),
+          zonedDateTime.getSecond(),
           jstTime.getDayOfYear(),
           0,
           0,
@@ -150,6 +154,10 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   @Override
   public boolean isValid() {
+    if (!super.isValid()) {
+      return false;
+    }
+
     final long bitString = this.getRawBitString();
     final long mustBeZero = bits(bitString, 0, 1L)
         | bits(bitString, 4, 1L)
@@ -293,7 +301,7 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   public ZonedDateTime extractSourceTime() {
     final LocalDate localDate =
         LocalDate.ofYearDay(currentCentury() + this.getYearInCentury(), this.getDayOfYear());
-    final LocalTime localTime = LocalTime.of(this.getHours(), this.getMinutes(), 0);
+    final LocalTime localTime = LocalTime.of(this.getHours(), this.getMinutes(), this.getSecond());
     return ZonedDateTime.of(localDate, localTime, ZONE_JST);
   }
 }

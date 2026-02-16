@@ -38,7 +38,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
         ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
         !ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
         false,
-        toBCD(ensureTimezone(time, ZONE_CET).getMinute()),
+        time.getSecond(), toBCD(ensureTimezone(time, ZONE_CET).getMinute()),
         toBCD(ensureTimezone(time, ZONE_CET).getHour()),
         toBCD(ensureTimezone(time, ZONE_CET).getDayOfMonth()),
         toBCD(ensureTimezone(time, ZONE_CET).getDayOfWeek().getValue()),
@@ -57,6 +57,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
    * @param cest                   Set to 1 when CEST is in effect.
    * @param cet                    Set to 1 when CET is in effect.
    * @param leapSecondAnnouncement Leap second announcement. Set during hour before leap second.
+   * @param second                 second part from source time
    * @param bcdMinutes             BCD encoded minutes (00-59)
    * @param bcdHours               BCD encoded hours (0-23)
    * @param bcdDayOfMonth          BCD encoded day of month (01-31)
@@ -72,6 +73,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
       final boolean cest,
       final boolean cet,
       final boolean leapSecondAnnouncement,
+      final int second,
       final int bcdMinutes,
       final int bcdHours,
       final int bcdDayOfMonth,
@@ -93,7 +95,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
         bcdDayOfWeek,
         bcdMonthNumber,
         bcdYearWithinCentury
-    ));
+    ), second);
   }
 
   /**
@@ -103,7 +105,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
    * @param msb0      if true then vector in MSB0, LSB0 otherwise
    */
   public Dcf77Record(final long dcf77bits, final boolean msb0) {
-    super(msb0 ? reverseLowestBits(dcf77bits, 60) : dcf77bits);
+    super(msb0 ? reverseLowestBits(dcf77bits, 60) : dcf77bits, 0);
   }
 
   private static long makeData(
@@ -375,7 +377,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
         this.getDayOfMonth(),
         this.getHour(),
         this.getMinute(),
-        0,
+        this.getSecond(),
         0,
         ZONE_CET);
   }
@@ -387,6 +389,10 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
    */
   @Override
   public boolean isValid() {
+    if (!super.isValid()) {
+      return false;
+    }
+
     final long bitString = this.getRawBitString();
     if (
         bits(bitString, 0, 1L) != 0L

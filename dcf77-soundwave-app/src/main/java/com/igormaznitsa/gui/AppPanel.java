@@ -20,6 +20,7 @@ import java.awt.GridLayout;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -260,19 +261,23 @@ public class AppPanel extends JPanel {
     final MinuteBasedTimeSignalWavRenderer minuteRenderer =
         this.minuteWavDataRendererSupplier.get();
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime = this.currentTimeDateIndicationProviderSupplier.get()
+      ZonedDateTime zonedDateTime = this.currentTimeDateIndicationProviderSupplier
+          .get()
           .getZonedTimeDateNow();
+
       boolean addedSuccessfully = true;
+
       for (int i = 0;
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&
                !Thread.currentThread().isInterrupted(); i++) {
         addedSuccessfully &=
-            renderer.offer(i == 0, minuteRenderer.makeTimeSignalBits(zonedDateTime), freqHz,
+            renderer.offer(minuteRenderer.makeTimeSignalBits(zonedDateTime), freqHz,
                 this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
-        zonedDateTime = zonedDateTime.plusMinutes(1);
+        zonedDateTime = zonedDateTime.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1);
       }
+
       final MinuteBasedTimeSignalBits stopRecord = minuteRenderer.makeTimeSignalBits(zonedDateTime);
-      addedSuccessfully &= renderer.offer(false, stopRecord, freqHz,
+      addedSuccessfully &= renderer.offer(stopRecord, freqHz,
           this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
 
       if (!addedSuccessfully) {

@@ -7,7 +7,6 @@ import java.util.List;
 public interface MinuteBasedTimeSignalWavRenderer extends TimeDateIndicationProvider {
 
   byte[] makeMinuteWavData(
-      boolean secondsAwareness,
       MinuteBasedTimeSignalBits minuteBitStringProvider,
       double freq,
       int sampleRate,
