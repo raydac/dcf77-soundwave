@@ -226,9 +226,9 @@ public class AppPanel extends JPanel {
     this.buttonFreq2.setToolTipText(null);
     this.buttonFreq3.setText("");
     this.buttonFreq3.setToolTipText(null);
-    final MinuteBasedTimeSignalWavRenderer renderer = this.minuteWavDataRendererSupplier.get();
-    final List<Integer> allowedCarrierFreq = this.minuteWavDataRendererSupplier.get()
-        .getAllowedCarrierFrequences();
+
+    final List<Integer> allowedCarrierFreq =
+        this.minuteWavDataRendererSupplier.get().getAllowedCarrierFrequences();
     if (!allowedCarrierFreq.isEmpty()) {
       this.buttonFreq1.setText(allowedCarrierFreq.get(0) + " Hz");
       this.buttonFreq1.setToolTipText("Carrier frequency " + allowedCarrierFreq.get(0) + " Hz");
