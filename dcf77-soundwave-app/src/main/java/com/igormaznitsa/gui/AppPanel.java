@@ -327,6 +327,8 @@ public class AppPanel extends JPanel {
       ZonedDateTime zonedDateTime = this.getCurrentTimeWithShiftAwareness()
           .plusMinutes(1); // ensure upcoming minute
 
+      System.out.println("Rendering start time: " + zonedDateTime);
+
       boolean addedSuccessfully = true;
 
       for (int i = 0;

@@ -1,7 +1,5 @@
 package com.igormaznitsa.gui;
 
-import static java.time.ZoneOffset.UTC;
-
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
@@ -327,9 +325,10 @@ public final class AppFrame extends JFrame {
               a -> null);
 
       ZonedDateTime time = this.appPanel.getCurrentTimeWithShiftAwareness()
-          .withZoneSameInstant(UTC)
           .plusMinutes(1) // ensure upcoming minute
           .truncatedTo(ChronoUnit.MINUTES);
+
+      System.out.println("'Save as', rendering since: " + time);
 
       final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
