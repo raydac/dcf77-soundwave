@@ -22,9 +22,11 @@ public class TimePanel extends JPanel {
   private final JLabel labelCest;
   private final JLabel labelTimeDate;
   private final Supplier<TimeDateIndicationProvider> timeSupplier;
+  private final Supplier<TimeOffsetProvider> timeOffsetProviderSupplier;
   private boolean showSecondsChange = true;
 
-  public TimePanel(final Supplier<TimeDateIndicationProvider> timeSupplier) {
+  public TimePanel(final Supplier<TimeDateIndicationProvider> timeSupplier,
+                   final Supplier<TimeOffsetProvider> timeOffsetSupplier) {
     super(new GridBagLayout());
     this.setBorder(
         createCompoundBorder(
@@ -33,6 +35,8 @@ public class TimePanel extends JPanel {
         )
     );
 
+    this.timeOffsetProviderSupplier =
+        timeOffsetSupplier == null ? () -> time -> time : timeOffsetSupplier;
     this.timeSupplier = timeSupplier == null ? () -> new TimeDateIndicationProvider() {
       @Override
       public ZonedDateTime getZonedTimeDateNow() {
@@ -89,6 +93,7 @@ public class TimePanel extends JPanel {
 
   public void refreshTime() {
     final Runnable runnable = () -> {
+      final TimeOffsetProvider timeOffsetProvider = this.timeOffsetProviderSupplier.get();
       final TimeDateIndicationProvider provider = this.timeSupplier.get();
       if (provider == null) {
         this.labelTimeDate.setText("00:00 0000-AAA-00");
@@ -113,7 +118,8 @@ public class TimePanel extends JPanel {
           String.format("%02d%s%02d %04d-%s-%02d", hours, sec, minute, year, month, date);
 
       this.labelTimeDate.setText(timeText);
-      this.labelCest.setText(provider.getIndicationText());
+      this.labelCest.setText(
+          timeOffsetProvider.getOffsetTimeText() + "  " + provider.getIndicationText());
 
       this.labelTimeDate.repaint();
       this.labelCest.repaint();

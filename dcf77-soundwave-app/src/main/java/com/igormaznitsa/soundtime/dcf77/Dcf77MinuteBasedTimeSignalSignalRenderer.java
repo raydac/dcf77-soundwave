@@ -18,7 +18,7 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(12916, 15500, 19375);
 
   @Override
-  public List<Integer> getAllowedCarrierFrequences() {
+  public List<Integer> getAllowedCarrierFrequencies() {
     return ALLOWED_CARRIER_FREQ;
   }
 

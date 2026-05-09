@@ -17,7 +17,7 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(8571, 12000, 15000);
 
   @Override
-  public List<Integer> getAllowedCarrierFrequences() {
+  public List<Integer> getAllowedCarrierFrequencies() {
     return ALLOWED_CARRIER_FREQ;
   }
 

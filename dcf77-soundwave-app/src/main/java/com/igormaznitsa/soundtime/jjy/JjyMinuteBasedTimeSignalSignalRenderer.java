@@ -18,7 +18,7 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(4100, 13333, 15900);
 
   @Override
-  public List<Integer> getAllowedCarrierFrequences() {
+  public List<Integer> getAllowedCarrierFrequencies() {
     return ALLOWED_CARRIER_FREQ;
   }
 

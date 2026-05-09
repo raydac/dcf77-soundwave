@@ -24,6 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -34,6 +35,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class AppPanel extends JPanel {
+
+  private static final Supplier<? extends TimeOffsetProvider>
+      SUPPLIER_NO_OFFSET_PROVIDER = () -> dateTime -> dateTime;
 
   private static final Color TIME_PANEL_NORMAL = Color.BLUE.darker().darker().darker();
   private static final Color TIME_PANEL_FIXED = Color.RED.darker().darker().darker().darker();
@@ -54,11 +58,15 @@ public class AppPanel extends JPanel {
   private final Supplier<AppFrame.OutputLineInfo> mixerSupplier;
   private final SignalProgressBar progressBarTime;
   private final AppPanelToggleButton buttonCustomTime;
+  private final AppPanelToggleButton buttonSignalTimeShift;
   private final Supplier<? extends TimeDateIndicationProvider>
       baseTimeDateIndicationProviderSupplier;
   private final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier;
+  private volatile Supplier<? extends TimeOffsetProvider> currentTimeOffsetProvider;
   private volatile Supplier<? extends TimeDateIndicationProvider>
       currentTimeDateIndicationProviderSupplier;
+
+  private int lastSelectedTimeOffsetInSeconds = 0;
 
   public AppPanel(
       final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
@@ -70,8 +78,10 @@ public class AppPanel extends JPanel {
     this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
     this.baseTimeDateIndicationProviderSupplier = minuteWavDataRendererSupplier;
     this.currentTimeDateIndicationProviderSupplier = this.baseTimeDateIndicationProviderSupplier;
+    this.currentTimeOffsetProvider = SUPPLIER_NO_OFFSET_PROVIDER;
     this.mixerSupplier = requireNonNull(mixerSupplier);
-    this.timePanel = new TimePanel(() -> this.currentTimeDateIndicationProviderSupplier.get());
+    this.timePanel = new TimePanel(() -> this.currentTimeDateIndicationProviderSupplier.get(),
+        () -> this.currentTimeOffsetProvider.get());
     this.timePanel.setBackground(TIME_PANEL_NORMAL);
     this.progressBarTime = new SignalProgressBar();
 
@@ -121,6 +131,56 @@ public class AppPanel extends JPanel {
     this.buttonCustomTime.setFont(
         GuiUtils.FONT_SOSA.deriveFont(defaultButtonFont.getStyle(), defaultButtonFont.getSize2D()));
 
+    this.buttonSignalTimeShift = new AppPanelToggleButton("➕/➖");
+    this.buttonSignalTimeShift.setToolTipText("Time shift applied to translated signal");
+    this.buttonSignalTimeShift.setFont(
+        GuiUtils.FONT_JULIA.deriveFont(defaultButtonFont.getStyle(),
+            defaultButtonFont.getSize2D()));
+
+    this.buttonSignalTimeShift.addActionListener(e -> {
+      if (this.buttonSignalTimeShift.isSelected()) {
+        final TimeOffsetSelectPanel panel =
+            new TimeOffsetSelectPanel(this.lastSelectedTimeOffsetInSeconds);
+        if (JOptionPane.showConfirmDialog(this, panel, "Translated Signal Time Shift",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION &&
+            panel.getSeconds() != 0) {
+          final int selectedSeconds = panel.getSeconds();
+          this.lastSelectedTimeOffsetInSeconds = selectedSeconds;
+
+          final Function<ZonedDateTime, ZonedDateTime> processor =
+              selectedSeconds < 0 ? z -> z.minusSeconds(selectedSeconds) :
+                  z -> z.plusSeconds(selectedSeconds);
+
+          final int absSeconds = Math.abs(selectedSeconds);
+          final String offsetText = String.format(
+              "SHFT: %s%02d:%02d:%02d",
+              selectedSeconds < 0 ? "-" : "+",
+              absSeconds / 3600,
+              (absSeconds % 3600) / 60,
+              absSeconds % 60
+          );
+
+          final TimeOffsetProvider timeOffsetProvider = new TimeOffsetProvider() {
+            @Override
+            public ZonedDateTime apply(final ZonedDateTime dateTime) {
+              return processor.apply(dateTime);
+            }
+
+            @Override
+            public String getOffsetTimeText() {
+              return offsetText;
+            }
+          };
+          this.currentTimeOffsetProvider = () -> timeOffsetProvider;
+        } else {
+          this.buttonSignalTimeShift.setSelected(false);
+          this.currentTimeOffsetProvider = SUPPLIER_NO_OFFSET_PROVIDER;
+        }
+      } else {
+        this.currentTimeOffsetProvider = SUPPLIER_NO_OFFSET_PROVIDER;
+      }
+    });
+
     this.buttonCustomTime.addActionListener(e -> {
       if (this.buttonCustomTime.isSelected()) {
         final ZonedDateTime selected =
@@ -129,7 +189,7 @@ public class AppPanel extends JPanel {
         if (selected == null) {
           this.buttonCustomTime.setSelected(false);
         } else {
-          this.currentTimeDateIndicationProviderSupplier = () -> new TimeDateIndicationProvider() {
+          final TimeDateIndicationProvider customProvider = new TimeDateIndicationProvider() {
             @Override
             public ZonedDateTime getZonedTimeDateNow() {
               return selected;
@@ -142,6 +202,8 @@ public class AppPanel extends JPanel {
                   ')';
             }
           };
+
+          this.currentTimeDateIndicationProviderSupplier = () -> customProvider;
           this.timePanel.setShowSecondsChange(false);
           this.timePanel.setBackground(TIME_PANEL_FIXED);
         }
@@ -193,7 +255,7 @@ public class AppPanel extends JPanel {
     controlPanel.add(this.button44100);
     controlPanel.add(this.button48000);
     controlPanel.add(this.button96000);
-    controlPanel.add(Box.createHorizontalGlue());
+    controlPanel.add(this.buttonSignalTimeShift);
     controlPanel.add(this.buttonCustomTime);
     controlPanel.add(Box.createHorizontalGlue());
 
@@ -228,7 +290,7 @@ public class AppPanel extends JPanel {
     this.buttonFreq3.setToolTipText(null);
 
     final List<Integer> allowedCarrierFreq =
-        this.minuteWavDataRendererSupplier.get().getAllowedCarrierFrequences();
+        this.minuteWavDataRendererSupplier.get().getAllowedCarrierFrequencies();
     if (!allowedCarrierFreq.isEmpty()) {
       this.buttonFreq1.setText(allowedCarrierFreq.get(0) + " Hz");
       this.buttonFreq1.setToolTipText("Carrier frequency " + allowedCarrierFreq.get(0) + " Hz");
@@ -243,8 +305,9 @@ public class AppPanel extends JPanel {
     }
   }
 
-  public ZonedDateTime getCurrentTime() {
-    return this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow();
+  public ZonedDateTime getCurrentTimeOffsetAware() {
+    return this.currentTimeOffsetProvider.get()
+        .apply(this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow());
   }
 
   public void dispose() {
@@ -262,9 +325,7 @@ public class AppPanel extends JPanel {
         this.minuteWavDataRendererSupplier.get();
 
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime = this.currentTimeDateIndicationProviderSupplier
-          .get()
-          .getZonedTimeDateNow()
+      ZonedDateTime zonedDateTime = this.getCurrentTimeOffsetAware()
           .plusMinutes(1); // ensure upcoming minute
 
       boolean addedSuccessfully = true;
@@ -419,6 +480,7 @@ public class AppPanel extends JPanel {
     this.buttonFreq2.setEnabled(flag);
     this.buttonFreq3.setEnabled(flag);
     this.buttonCustomTime.setEnabled(flag);
+    this.buttonSignalTimeShift.setEnabled(flag);
   }
 
   public TimePanel getTimePanel() {
@@ -434,7 +496,7 @@ public class AppPanel extends JPanel {
     if (renderer == null) {
       return -1;
     }
-    final List<Integer> freq = renderer.getAllowedCarrierFrequences();
+    final List<Integer> freq = renderer.getAllowedCarrierFrequencies();
     if (this.buttonFreq1.isSelected()) {
       return freq.get(0);
     }

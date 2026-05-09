@@ -22,11 +22,15 @@ public final class GuiUtils {
   public static final Font FONT_DIGITAL;
   public static final Font FONT_ADSR;
   public static final Font FONT_SOSA;
+  public static final Font FONT_JULIA;
 
   static {
     try {
       final GraphicsEnvironment graphicsEnvironment =
           GraphicsEnvironment.getLocalGraphicsEnvironment();
+      FONT_JULIA =
+          Font.createFont(Font.TRUETYPE_FONT, requireNonNull(GuiUtils.class.getResourceAsStream(
+              "/fonts/JuliaMono-Regular.ttf")));
       FONT_DIGITAL =
           Font.createFont(Font.TRUETYPE_FONT, requireNonNull(GuiUtils.class.getResourceAsStream(
               "/fonts/digital-7 (mono).ttf")));

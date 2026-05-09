@@ -18,7 +18,7 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(11416, 13700, 17125);
 
   @Override
-  public List<Integer> getAllowedCarrierFrequences() {
+  public List<Integer> getAllowedCarrierFrequencies() {
     return ALLOWED_CARRIER_FREQ;
   }
 

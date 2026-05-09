@@ -326,7 +326,7 @@ public final class AppFrame extends JFrame {
               this.appPanel.getSampleRate(),
               a -> null);
 
-      ZonedDateTime time = this.appPanel.getCurrentTime().withZoneSameInstant(UTC)
+      ZonedDateTime time = this.appPanel.getCurrentTimeOffsetAware().withZoneSameInstant(UTC)
           .plusMinutes(1) // ensure upcoming minute
           .truncatedTo(ChronoUnit.MINUTES);
 

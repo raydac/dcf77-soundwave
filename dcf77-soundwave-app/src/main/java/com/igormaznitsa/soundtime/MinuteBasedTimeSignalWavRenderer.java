@@ -18,6 +18,6 @@ public interface MinuteBasedTimeSignalWavRenderer extends TimeDateIndicationProv
 
   MinuteBasedTimeSignalBits makeTimeSignalBits(ZonedDateTime zonedDateTime);
 
-  List<Integer> getAllowedCarrierFrequences();
+  List<Integer> getAllowedCarrierFrequencies();
 
 }
