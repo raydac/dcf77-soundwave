@@ -153,7 +153,7 @@ public class AppPanel extends JPanel {
 
           final int absSeconds = Math.abs(selectedSeconds);
           final String offsetText = String.format(
-              "SHFT: %s%02d:%02d:%02d",
+              "SHFT:%s%02d:%02d:%02d ",
               selectedSeconds < 0 ? "-" : "+",
               absSeconds / 3600,
               (absSeconds % 3600) / 60,
