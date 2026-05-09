@@ -30,23 +30,22 @@ public class TimeOffsetSelectPanel extends JPanel {
     settings.use24HourClockFormat();
 
     settings.generatePotentialMenuTimes(
-        TimePickerSettings.TimeIncrement.FifteenMinutes,
+        TimePickerSettings.TimeIncrement.ThirtyMinutes,
         LocalTime.of(0, 0),
         LocalTime.of(23, 59)
     );
 
     settings.setDisplaySpinnerButtons(true);
-    settings.setFormatForDisplayTime("HH:mm:ss");
-    settings.setFormatForMenuTimes("HH:mm:ss");
+    settings.setFormatForDisplayTime("HH:mm");
+    settings.setFormatForMenuTimes("HH:mm");
 
     this.timePicker = new TimePicker(settings);
 
     row.add(this.signBox);
     row.add(this.timePicker);
 
-    add(row, BorderLayout.CENTER);
-
-    setSeconds(initialSignedSeconds);
+    this.add(row, BorderLayout.CENTER);
+    this.setSeconds(initialSignedSeconds);
   }
 
   public int getSeconds() {

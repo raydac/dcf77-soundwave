@@ -153,11 +153,10 @@ public class AppPanel extends JPanel {
 
           final int absSeconds = Math.abs(selectedSeconds);
           final String offsetText = String.format(
-              "SHFT:%s%02d:%02d:%02d ",
+              "SHFT:%s%02d:%02d ",
               selectedSeconds < 0 ? "-" : "+",
               absSeconds / 3600,
-              (absSeconds % 3600) / 60,
-              absSeconds % 60
+              (absSeconds % 3600) / 60
           );
 
           final TimeOffsetProvider timeOffsetProvider = new TimeOffsetProvider() {
@@ -305,7 +304,7 @@ public class AppPanel extends JPanel {
     }
   }
 
-  public ZonedDateTime getCurrentTimeOffsetAware() {
+  public ZonedDateTime getCurrentTimeWithShiftAwareness() {
     return this.currentTimeOffsetProvider.get()
         .apply(this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow());
   }
@@ -325,7 +324,7 @@ public class AppPanel extends JPanel {
         this.minuteWavDataRendererSupplier.get();
 
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime = this.getCurrentTimeOffsetAware()
+      ZonedDateTime zonedDateTime = this.getCurrentTimeWithShiftAwareness()
           .plusMinutes(1); // ensure upcoming minute
 
       boolean addedSuccessfully = true;
