@@ -332,7 +332,7 @@ public final class AppFrame extends JFrame {
           .plusMinutes(1) // ensure upcoming minute
           .truncatedTo(ChronoUnit.MINUTES);
 
-      System.out.println("'Save as', rendering since: " + time);
+      System.out.println("'Save as', rendering since (" + this.dstDetectionMode + "): " + time);
 
       final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
