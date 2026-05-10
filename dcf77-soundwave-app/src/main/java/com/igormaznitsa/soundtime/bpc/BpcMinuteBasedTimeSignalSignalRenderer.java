@@ -100,11 +100,17 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
   @Override
   public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(ZONE_CHN);
+    return ZonedDateTime.now(this.getProtocolZoneId());
   }
 
   @Override
-  public String getIndicationText() {
-    return "CHN";
+  public ZoneId getProtocolZoneId() {
+    return ZONE_CHN;
   }
+
+  @Override
+  public String getProtocolId() {
+    return "BPC";
+  }
+
 }

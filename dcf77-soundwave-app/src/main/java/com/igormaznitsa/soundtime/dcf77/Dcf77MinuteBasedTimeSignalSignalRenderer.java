@@ -3,7 +3,7 @@ package com.igormaznitsa.soundtime.dcf77;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
-import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -78,12 +78,18 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
   }
 
   @Override
-  public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(Dcf77Record.ZONE_CET);
+  public ZoneId getProtocolZoneId() {
+    return Dcf77Record.ZONE_CET;
   }
 
   @Override
-  public String getIndicationText() {
-    return Dcf77Record.ZONE_CET.getRules().isDaylightSavings(Instant.now()) ? "CEST" : "CET";
+  public String getProtocolId() {
+    return "DCF77";
   }
+
+  @Override
+  public ZonedDateTime getZonedTimeDateNow() {
+    return ZonedDateTime.now(this.getProtocolZoneId());
+  }
+
 }

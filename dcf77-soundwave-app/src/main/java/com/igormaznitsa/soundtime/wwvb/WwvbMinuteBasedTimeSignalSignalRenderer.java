@@ -5,6 +5,7 @@ import static java.time.ZoneOffset.UTC;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -80,11 +81,16 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
 
   @Override
   public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(UTC);
+    return ZonedDateTime.now(this.getProtocolZoneId());
   }
 
   @Override
-  public String getIndicationText() {
-    return "UTC";
+  public ZoneId getProtocolZoneId() {
+    return UTC;
+  }
+
+  @Override
+  public String getProtocolId() {
+    return "WWVB";
   }
 }

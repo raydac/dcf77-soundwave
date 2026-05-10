@@ -19,6 +19,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -195,10 +196,13 @@ public class AppPanel extends JPanel {
             }
 
             @Override
-            public String getIndicationText() {
-              return "CUSTOM (" +
-                  AppPanel.this.baseTimeDateIndicationProviderSupplier.get().getIndicationText() +
-                  ')';
+            public ZoneId getProtocolZoneId() {
+              return AppPanel.this.baseTimeDateIndicationProviderSupplier.get().getProtocolZoneId();
+            }
+
+            @Override
+            public String getProtocolId() {
+              return AppPanel.this.baseTimeDateIndicationProviderSupplier.get().getProtocolId();
             }
           };
 

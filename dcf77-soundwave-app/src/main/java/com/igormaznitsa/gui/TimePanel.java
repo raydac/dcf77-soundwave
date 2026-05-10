@@ -8,9 +8,11 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,17 +39,7 @@ public class TimePanel extends JPanel {
 
     this.timeOffsetProviderSupplier =
         timeOffsetSupplier == null ? () -> time -> time : timeOffsetSupplier;
-    this.timeSupplier = timeSupplier == null ? () -> new TimeDateIndicationProvider() {
-      @Override
-      public ZonedDateTime getZonedTimeDateNow() {
-        return ZonedDateTime.now();
-      }
-
-      @Override
-      public String getIndicationText() {
-        return "NULL";
-      }
-    } : timeSupplier;
+    this.timeSupplier = Objects.requireNonNull(timeSupplier);
 
     GridBagConstraints gbc;
 
@@ -93,7 +85,6 @@ public class TimePanel extends JPanel {
 
   public void refreshTime() {
     final Runnable runnable = () -> {
-      final TimeOffsetProvider timeOffsetProvider = this.timeOffsetProviderSupplier.get();
       final TimeDateIndicationProvider provider = this.timeSupplier.get();
       if (provider == null) {
         this.labelTimeDate.setText("00:00 0000-AAA-00");
@@ -118,8 +109,7 @@ public class TimePanel extends JPanel {
           String.format("%02d%s%02d %04d-%s-%02d", hours, sec, minute, year, month, date);
 
       this.labelTimeDate.setText(timeText);
-      this.labelCest.setText(
-          timeOffsetProvider.getOffsetTimeText() + "  " + provider.getIndicationText());
+      this.labelCest.setText(this.makeAdditionalInfoLabelText());
 
       this.labelTimeDate.repaint();
       this.labelCest.repaint();
@@ -130,4 +120,21 @@ public class TimePanel extends JPanel {
       SwingUtilities.invokeLater(runnable);
     }
   }
+
+  private String makeAdditionalInfoLabelText() {
+    final String offsetTimeText = this.timeOffsetProviderSupplier.get().getOffsetTimeText();
+    final String protocolName = this.timeSupplier.get().getProtocolId();
+
+    String zoneId =
+        this.timeSupplier.get().getProtocolZoneId().getId().trim().toUpperCase(Locale.ROOT);
+    if ("z".equalsIgnoreCase(zoneId)) {
+      zoneId = "UTC";
+    } else if (zoneId.equalsIgnoreCase("CET") &&
+        this.timeSupplier.get().getProtocolZoneId().getRules().isDaylightSavings(Instant.now())) {
+      zoneId = "CEST";
+    }
+
+    return offsetTimeText + " " + protocolName + " (" + zoneId + ")";
+  }
+
 }

@@ -3,6 +3,7 @@ package com.igormaznitsa.soundtime.jjy;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -105,11 +106,16 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
 
   @Override
   public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(JjyRecord.ZONE_JST);
+    return ZonedDateTime.now(this.getProtocolZoneId());
   }
 
   @Override
-  public String getIndicationText() {
-    return "JST";
+  public ZoneId getProtocolZoneId() {
+    return JjyRecord.ZONE_JST;
+  }
+
+  @Override
+  public String getProtocolId() {
+    return "JJY";
   }
 }
