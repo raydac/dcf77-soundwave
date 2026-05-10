@@ -1,5 +1,6 @@
 package com.igormaznitsa.gui;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNull;
 import static javax.swing.BorderFactory.createEmptyBorder;
 import static javax.swing.BorderFactory.createEtchedBorder;
@@ -8,6 +9,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 import com.github.lgooddatepicker.components.DateTimePicker;
 import com.github.lgooddatepicker.components.TimePickerSettings;
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.awt.BorderLayout;
@@ -60,18 +62,36 @@ public class AppPanel extends JPanel {
   private final SignalProgressBar progressBarTime;
   private final AppPanelToggleButton buttonCustomTime;
   private final AppPanelToggleButton buttonSignalTimeShift;
+  private final AppPanelToggleButton buttonForceUTCTimeZone;
   private final Supplier<? extends TimeDateIndicationProvider>
       baseTimeDateIndicationProviderSupplier;
   private final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier;
+  private final TimeDateIndicationProvider UTC_BASE_WRAPPER = new TimeDateIndicationProvider() {
+    @Override
+    public ZonedDateTime getZonedTimeDateNow(DstDetection dstDetection) {
+      return baseTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow(dstDetection)
+          .withZoneSameInstant(UTC);
+    }
+
+    @Override
+    public ZoneId getStandardSignalZoneId() {
+      return UTC;
+    }
+
+    @Override
+    public String getProtocolId() {
+      return baseTimeDateIndicationProviderSupplier.get().getProtocolId();
+    }
+  };
   private volatile Supplier<? extends TimeOffsetProvider> currentTimeOffsetProvider;
   private volatile Supplier<? extends TimeDateIndicationProvider>
       currentTimeDateIndicationProviderSupplier;
-
   private int lastSelectedTimeOffsetInSeconds = 0;
 
   public AppPanel(
       final Supplier<AppFrame.OutputLineInfo> mixerSupplier,
-      final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier
+      final Supplier<MinuteBasedTimeSignalWavRenderer> minuteWavDataRendererSupplier,
+      final Supplier<DstDetection> dstDetectionSupplier
   ) {
     super(new BorderLayout(0, 0));
     this.setBorder(createEmptyBorder(8, 8, 8, 8));
@@ -79,10 +99,11 @@ public class AppPanel extends JPanel {
     this.minuteWavDataRendererSupplier = requireNonNull(minuteWavDataRendererSupplier);
     this.baseTimeDateIndicationProviderSupplier = minuteWavDataRendererSupplier;
     this.currentTimeDateIndicationProviderSupplier = this.baseTimeDateIndicationProviderSupplier;
+
     this.currentTimeOffsetProvider = SUPPLIER_NO_OFFSET_PROVIDER;
     this.mixerSupplier = requireNonNull(mixerSupplier);
     this.timePanel = new TimePanel(() -> this.currentTimeDateIndicationProviderSupplier.get(),
-        () -> this.currentTimeOffsetProvider.get());
+        () -> this.currentTimeOffsetProvider.get(), dstDetectionSupplier);
     this.timePanel.setBackground(TIME_PANEL_NORMAL);
     this.progressBarTime = new SignalProgressBar();
 
@@ -138,6 +159,12 @@ public class AppPanel extends JPanel {
         GuiUtils.FONT_JULIA.deriveFont(defaultButtonFont.getStyle(),
             defaultButtonFont.getSize2D()));
 
+    this.buttonForceUTCTimeZone = new AppPanelToggleButton("UTC");
+    this.buttonForceUTCTimeZone.setToolTipText("Force use UTC time zone for signal");
+    this.buttonForceUTCTimeZone.setFont(
+        GuiUtils.FONT_JULIA.deriveFont(defaultButtonFont.getStyle(),
+            defaultButtonFont.getSize2D()));
+
     this.buttonSignalTimeShift.addActionListener(e -> {
       if (this.buttonSignalTimeShift.isSelected()) {
         final TimeOffsetSelectPanel panel =
@@ -181,23 +208,42 @@ public class AppPanel extends JPanel {
       }
     });
 
+    this.buttonForceUTCTimeZone.addActionListener(e -> {
+      final boolean customTimeActivated = this.buttonCustomTime.isSelected();
+      if (this.buttonForceUTCTimeZone.isSelected()) {
+        if (!customTimeActivated) {
+          this.currentTimeDateIndicationProviderSupplier =
+              () -> UTC_BASE_WRAPPER;
+        }
+      } else {
+        if (!customTimeActivated) {
+          this.currentTimeDateIndicationProviderSupplier =
+              this.baseTimeDateIndicationProviderSupplier;
+        }
+      }
+    });
+
     this.buttonCustomTime.addActionListener(e -> {
       if (this.buttonCustomTime.isSelected()) {
-        final ZonedDateTime selected =
-            this.getSelectedTime(this.baseTimeDateIndicationProviderSupplier.get()
-                .getZonedTimeDateNow());
+        ZonedDateTime selected = this.getSelectedTime(
+            this.baseTimeDateIndicationProviderSupplier.get()
+                .getZonedTimeDateNow(dstDetectionSupplier.get()));
+
         if (selected == null) {
           this.buttonCustomTime.setSelected(false);
         } else {
           final TimeDateIndicationProvider customProvider = new TimeDateIndicationProvider() {
             @Override
-            public ZonedDateTime getZonedTimeDateNow() {
-              return selected;
+            public ZonedDateTime getZonedTimeDateNow(final DstDetection dstDetection) {
+              return buttonForceUTCTimeZone.isSelected() ? selected.withZoneSameInstant(UTC) :
+                  selected;
             }
 
             @Override
-            public ZoneId getProtocolZoneId() {
-              return AppPanel.this.baseTimeDateIndicationProviderSupplier.get().getProtocolZoneId();
+            public ZoneId getStandardSignalZoneId() {
+              return buttonForceUTCTimeZone.isSelected() ? UTC :
+                  AppPanel.this.baseTimeDateIndicationProviderSupplier.get()
+                  .getStandardSignalZoneId();
             }
 
             @Override
@@ -211,8 +257,12 @@ public class AppPanel extends JPanel {
           this.timePanel.setBackground(TIME_PANEL_FIXED);
         }
       } else {
-        this.currentTimeDateIndicationProviderSupplier =
-            this.baseTimeDateIndicationProviderSupplier;
+        if (this.buttonForceUTCTimeZone.isSelected()) {
+          this.currentTimeDateIndicationProviderSupplier = () -> UTC_BASE_WRAPPER;
+        } else {
+          this.currentTimeDateIndicationProviderSupplier =
+              this.baseTimeDateIndicationProviderSupplier;
+        }
         this.timePanel.setShowSecondsChange(true);
         this.timePanel.setBackground(TIME_PANEL_NORMAL);
       }
@@ -260,14 +310,13 @@ public class AppPanel extends JPanel {
     controlPanel.add(this.button96000);
     controlPanel.add(this.buttonSignalTimeShift);
     controlPanel.add(this.buttonCustomTime);
-    controlPanel.add(Box.createHorizontalGlue());
+    controlPanel.add(this.buttonForceUTCTimeZone);
 
     this.add(controlPanel, BorderLayout.EAST);
 
     this.buttonSine.setSelected(true);
     this.button44100.setSelected(true);
     this.buttonFreq2.setSelected(true);
-
 
     this.buttonStartStop.addActionListener(e -> {
       if (this.buttonStartStop.isSelected()) {
@@ -277,7 +326,7 @@ public class AppPanel extends JPanel {
               JOptionPane.WARNING_MESSAGE);
           this.buttonStartStop.setSelected(false);
         }
-        this.startRendering(lineInfo);
+        this.startRendering(lineInfo, dstDetectionSupplier.get());
       } else {
         this.stopRendering(null);
       }
@@ -308,9 +357,17 @@ public class AppPanel extends JPanel {
     }
   }
 
-  public ZonedDateTime getCurrentTimeWithShiftAwareness() {
-    return this.currentTimeOffsetProvider.get()
-        .apply(this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow());
+  public ZonedDateTime getCurrentTimeWithShiftAwareness(final DstDetection dstDetection) {
+    if (this.buttonForceUTCTimeZone.isSelected()) {
+      return this.currentTimeOffsetProvider.get()
+          .apply(
+              this.currentTimeDateIndicationProviderSupplier.get().getZonedTimeDateNow(dstDetection)
+                  .withZoneSameInstant(UTC));
+    } else {
+      return this.currentTimeOffsetProvider.get()
+          .apply(this.currentTimeDateIndicationProviderSupplier.get()
+              .getZonedTimeDateNow(dstDetection));
+    }
   }
 
   public void dispose() {
@@ -322,16 +379,18 @@ public class AppPanel extends JPanel {
       final AmplitudeSoundSignalRenderer renderer,
       final int numberOfRenderedMinutes,
       final int freqHz,
-      final AmplitudeSoundSignalRenderer.SignalShape shape
+      final AmplitudeSoundSignalRenderer.SignalShape shape,
+      final DstDetection dstDetection
   ) {
     final MinuteBasedTimeSignalWavRenderer minuteRenderer =
         this.minuteWavDataRendererSupplier.get();
 
     final Thread thread = new Thread(() -> {
-      ZonedDateTime zonedDateTime = this.getCurrentTimeWithShiftAwareness()
+      ZonedDateTime zonedDateTime = this.getCurrentTimeWithShiftAwareness(dstDetection)
           .plusMinutes(1); // ensure upcoming minute
 
-      System.out.println("Rendering start time: " + zonedDateTime);
+      System.out.println(
+          String.format("Rendering start time (%s): %s", dstDetection, zonedDateTime));
 
       boolean addedSuccessfully = true;
 
@@ -339,13 +398,14 @@ public class AppPanel extends JPanel {
            i < numberOfRenderedMinutes && !renderer.isDisposed() &&
                !Thread.currentThread().isInterrupted(); i++) {
         addedSuccessfully &=
-            renderer.offer(minuteRenderer.makeTimeSignalBits(zonedDateTime), freqHz,
+            renderer.offer(minuteRenderer.makeTimeSignalBits(zonedDateTime, dstDetection), freqHz,
                 this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
 
         zonedDateTime = zonedDateTime.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1);
       }
 
-      final MinuteBasedTimeSignalBits stopRecord = minuteRenderer.makeTimeSignalBits(zonedDateTime);
+      final MinuteBasedTimeSignalBits stopRecord =
+          minuteRenderer.makeTimeSignalBits(zonedDateTime, dstDetection);
       addedSuccessfully &= renderer.offer(stopRecord, freqHz,
           this.minuteWavDataRendererSupplier.get().getAmplitudeDeviation(), shape);
 
@@ -414,7 +474,8 @@ public class AppPanel extends JPanel {
     return null;
   }
 
-  private void startRendering(final AppFrame.OutputLineInfo output) {
+  private void startRendering(final AppFrame.OutputLineInfo output,
+                              final DstDetection dstDetection) {
     if (this.currentRenderer.get() == null) {
       this.progressBarTime.setVisible(true);
       this.progressBarReplacement.setVisible(false);
@@ -436,7 +497,7 @@ public class AppPanel extends JPanel {
           final AmplitudeSoundSignalRenderer.SignalShape shape = this.getSignalShape();
           final int freq = this.getCarrierFreq();
 
-          this.sendTimeData(renderer, 60, freq, shape);
+          this.sendTimeData(renderer, 60, freq, shape, dstDetection);
         } catch (Exception ex) {
           renderer.dispose();
           this.currentRenderer.set(null);
@@ -486,6 +547,7 @@ public class AppPanel extends JPanel {
     this.buttonFreq3.setEnabled(flag);
     this.buttonCustomTime.setEnabled(flag);
     this.buttonSignalTimeShift.setEnabled(flag);
+    this.buttonForceUTCTimeZone.setEnabled(flag);
   }
 
   public TimePanel getTimePanel() {

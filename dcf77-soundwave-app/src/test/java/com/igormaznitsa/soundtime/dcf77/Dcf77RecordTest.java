@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.igormaznitsa.soundtime.DstDetection;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -13,8 +14,8 @@ class Dcf77RecordTest {
 
   @Test
   void testDcf77FromDateTime() {
-    final ZonedDateTime time = ZonedDateTime.now(Dcf77Record.ZONE_CET);
-    final Dcf77Record dcf77Record = new Dcf77Record(time);
+    final ZonedDateTime time = ZonedDateTime.now(Dcf77Record.ZONE_BERLIN);
+    final Dcf77Record dcf77Record = new Dcf77Record(time, DstDetection.DST_AUTODETECT);
     assertTrue(dcf77Record.isValid());
     assertEquals(time.getMinute(), dcf77Record.getMinute());
     assertEquals(time.getHour(), dcf77Record.getHour());
@@ -44,8 +45,9 @@ class Dcf77RecordTest {
 
     final ZonedDateTime zonedDateTime =
         ZonedDateTime.of(LocalDate.of(1999, 10, 1), LocalTime.of(17, 29, 0, 0),
-            Dcf77Record.ZONE_CET);
-    final Dcf77Record cratedFromDateTime = new Dcf77Record(zonedDateTime);
+            Dcf77Record.ZONE_BERLIN);
+    final Dcf77Record cratedFromDateTime =
+        new Dcf77Record(zonedDateTime, DstDetection.DST_AUTODETECT);
 
     assertTrue(cratedFromDateTime.isValid());
     assertTrue(cratedFromDateTime.isCest());

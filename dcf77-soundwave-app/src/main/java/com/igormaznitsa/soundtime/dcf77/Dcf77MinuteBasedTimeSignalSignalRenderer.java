@@ -1,6 +1,7 @@
 package com.igormaznitsa.soundtime.dcf77;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.time.ZoneId;
@@ -23,8 +24,9 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
   }
 
   @Override
-  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
-    return new Dcf77Record(zonedDateTime);
+  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime,
+                                                      final DstDetection dstDetection) {
+    return new Dcf77Record(zonedDateTime, dstDetection);
   }
 
   @Override
@@ -78,8 +80,8 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
   }
 
   @Override
-  public ZoneId getProtocolZoneId() {
-    return Dcf77Record.ZONE_CET;
+  public ZoneId getStandardSignalZoneId() {
+    return Dcf77Record.ZONE_BERLIN;
   }
 
   @Override
@@ -88,8 +90,17 @@ public class Dcf77MinuteBasedTimeSignalSignalRenderer implements MinuteBasedTime
   }
 
   @Override
-  public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(this.getProtocolZoneId());
+  public ZonedDateTime getZonedTimeDateNow(final DstDetection dstDetection) {
+    switch (dstDetection) {
+      case DST_AUTODETECT:
+        return ZonedDateTime.now(Dcf77Record.ZONE_BERLIN);
+      case DST_FORCE_ON:
+        return ZonedDateTime.now(Dcf77Record.ZONE_FIXED_CEST);
+      case DST_FORCE_OFF:
+        return ZonedDateTime.now(Dcf77Record.ZONE_FIXED_CET);
+      default:
+        throw new Error("Unknown dst detection: " + dstDetection);
+    }
   }
 
 }

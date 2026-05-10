@@ -1,7 +1,9 @@
 package com.igormaznitsa.soundtime.dcf77;
 
 import com.igormaznitsa.soundtime.AbstractMinuteBasedTimeSignalRecord;
+import com.igormaznitsa.soundtime.DstDetection;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 /**
@@ -11,40 +13,34 @@ import java.time.ZonedDateTime;
  * @see <a href=”https://www.ptb.de/cms/fileadmin/internet/fachabteilungen/abteilung_4/4.4_zeit_und_frequenz/pdf/2004_Piester_-_PTB-Mitteilungen_114.pdf”>DCF77 specification</a>
  */
 public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
-  /**
-   * Standard time zone for DCF77 signal.
-   */
-  static final ZoneId ZONE_CET = ZoneId.of("CET");
 
-  /**
-   * Create record for now.
-   */
-  public Dcf77Record() {
-    this(ZonedDateTime.now(ZONE_CET));
-  }
+  public static final ZoneId ZONE_BERLIN = ZoneId.of("Europe/Berlin");
+  public static final ZoneId ZONE_FIXED_CET = ZoneOffset.ofHours(1);
+  public static final ZoneId ZONE_FIXED_CEST = ZoneOffset.ofHours(2);
 
   /**
    * Create for provided zoned data time.
    *
-   * @param time base time to create record
+   * @param time         base time to create record
+   * @param dstDetection shows to detect automatically CEST or force its set or reset
    * @throws NullPointerException thrown if time is null
    */
-  public Dcf77Record(final ZonedDateTime time) {
+  public Dcf77Record(final ZonedDateTime time, final DstDetection dstDetection) {
     this(
         false,
         0,
         false,
         false,
-        ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
-        !ZONE_CET.getRules().isDaylightSavings(time.toInstant()),
+        decodeDstDetection(time, dstDetection),
+        !decodeDstDetection(time, dstDetection),
         false,
         time.getSecond(),
-        toBCD(ensureTimezone(time, ZONE_CET).getMinute()),
-        toBCD(ensureTimezone(time, ZONE_CET).getHour()),
-        toBCD(ensureTimezone(time, ZONE_CET).getDayOfMonth()),
-        toBCD(ensureTimezone(time, ZONE_CET).getDayOfWeek().getValue()),
-        toBCD(ensureTimezone(time, ZONE_CET).getMonthValue()),
-        toBCD(ensureTimezone(time, ZONE_CET).getYear() % 100)
+        toBCD(time.getMinute()),
+        toBCD(time.getHour()),
+        toBCD(time.getDayOfMonth()),
+        toBCD(time.getDayOfWeek().getValue()),
+        toBCD(time.getMonthValue()),
+        toBCD(time.getYear() % 100)
     );
   }
 
@@ -107,6 +103,20 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
    */
   public Dcf77Record(final long dcf77bits, final boolean msb0) {
     super(msb0 ? reverseLowestBits(dcf77bits, 60) : dcf77bits, 0);
+  }
+
+  private static boolean decodeDstDetection(final ZonedDateTime time,
+                                            final DstDetection dstDetection) {
+    switch (dstDetection) {
+      case DST_AUTODETECT:
+        return ZONE_BERLIN.getRules().isDaylightSavings(time.toInstant());
+      case DST_FORCE_ON:
+        return true;
+      case DST_FORCE_OFF:
+        return false;
+      default:
+        throw new Error("Unknown DstDetection: " + dstDetection);
+    }
   }
 
   private static long makeData(
@@ -380,7 +390,7 @@ public final class Dcf77Record extends AbstractMinuteBasedTimeSignalRecord {
         this.getMinute(),
         this.getSecond(),
         0,
-        ZONE_CET);
+        ZONE_BERLIN);
   }
 
   /**

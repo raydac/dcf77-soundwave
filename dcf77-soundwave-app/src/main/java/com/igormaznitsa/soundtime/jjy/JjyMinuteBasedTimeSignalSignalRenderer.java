@@ -1,6 +1,7 @@
 package com.igormaznitsa.soundtime.jjy;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.time.ZoneId;
@@ -9,13 +10,11 @@ import java.util.List;
 
 public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSignalWavRenderer {
 
-  private static final String MORSE_JJY_MSB0 =
-      "001011011011001011011011001101011011000101101101100101101101100110101101100";
-
   public static final JjyMinuteBasedTimeSignalSignalRenderer
       INSTANCE = new JjyMinuteBasedTimeSignalSignalRenderer();
-
   public static final double JJY_STANDARD_AMPLITUDE_DEVIATION = 0.9d;
+  private static final String MORSE_JJY_MSB0 =
+      "001011011011001011011011001101011011000101101101100101101101100110101101100";
   private static final List<Integer> ALLOWED_CARRIER_FREQ = List.of(4100, 13333, 15900);
 
   @Override
@@ -24,7 +23,8 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   }
 
   @Override
-  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
+  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime,
+                                                      final DstDetection dstDetection) {
     return JjyRecord.makeWithAnnounceCallSignAwareness(zonedDateTime);
   }
 
@@ -105,12 +105,12 @@ public class JjyMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   }
 
   @Override
-  public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(this.getProtocolZoneId());
+  public ZonedDateTime getZonedTimeDateNow(final DstDetection dstDetection) {
+    return ZonedDateTime.now(this.getStandardSignalZoneId());
   }
 
   @Override
-  public ZoneId getProtocolZoneId() {
+  public ZoneId getStandardSignalZoneId() {
     return JjyRecord.ZONE_JST;
   }
 

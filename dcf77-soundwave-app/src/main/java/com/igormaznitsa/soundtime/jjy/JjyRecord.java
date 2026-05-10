@@ -14,12 +14,12 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   public JjyRecord(final ZonedDateTime time) {
     this(
-        ensureTimezone(time, ZONE_JST).getHour(),
-        ensureTimezone(time, ZONE_JST).getMinute(),
+        time.getHour(),
+        time.getMinute(),
         time.getSecond(),
-        ensureTimezone(time, ZONE_JST).getDayOfYear(),
-        ensureTimezone(time, ZONE_JST).getYear() % 100,
-        ensureTimezone(time, ZONE_JST).getDayOfWeek().getValue() % 7,
+        time.getDayOfYear(),
+        time.getYear() % 100,
+        time.getDayOfWeek().getValue() % 7,
         false,
         false
     );
@@ -73,20 +73,19 @@ public final class JjyRecord extends AbstractMinuteBasedTimeSignalRecord {
   }
 
   public static JjyRecord makeWithAnnounceCallSignAwareness(final ZonedDateTime zonedDateTime) {
-    final ZonedDateTime jstTime = ensureTimezone(zonedDateTime, ZONE_JST);
-    if (isCallSignAnnouncementMinute(jstTime.getMinute())) {
+    if (isCallSignAnnouncementMinute(zonedDateTime.getMinute())) {
       return new JjyRecord(
-          jstTime.getHour(),
-          jstTime.getMinute(),
+          zonedDateTime.getHour(),
+          zonedDateTime.getMinute(),
           zonedDateTime.getSecond(),
-          jstTime.getDayOfYear(),
+          zonedDateTime.getDayOfYear(),
           0,
           0,
           false,
           0
       );
     } else {
-      return new JjyRecord(jstTime);
+      return new JjyRecord(zonedDateTime);
     }
   }
 

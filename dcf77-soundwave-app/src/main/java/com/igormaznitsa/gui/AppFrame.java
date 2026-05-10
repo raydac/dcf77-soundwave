@@ -1,6 +1,7 @@
 package com.igormaznitsa.gui;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import com.igormaznitsa.soundtime.bpc.BpcMinuteBasedTimeSignalSignalRenderer;
@@ -41,6 +42,7 @@ import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -132,6 +134,7 @@ public final class AppFrame extends JFrame {
   private final AtomicReference<MinuteBasedTimeSignalWavRenderer> currentTimeSignalRenderer =
       new AtomicReference<>();
   private File lastSavedFile;
+  private volatile DstDetection dstDetectionMode = DstDetection.DST_AUTODETECT;
 
   public AppFrame() {
     super(TITLE);
@@ -140,7 +143,8 @@ public final class AppFrame extends JFrame {
     this.currentMixer.set(findDefaultOutputMixer());
     this.appPanel = new AppPanel(
         this.currentMixer::get,
-        this::getCurrentMinuteWavDataRenderer
+        this::getCurrentMinuteWavDataRenderer,
+        () -> this.dstDetectionMode
     );
     this.setJMenuBar(this.makeMenuBar());
     this.setContentPane(this.appPanel);
@@ -324,7 +328,7 @@ public final class AppFrame extends JFrame {
               this.appPanel.getSampleRate(),
               a -> null);
 
-      ZonedDateTime time = this.appPanel.getCurrentTimeWithShiftAwareness()
+      ZonedDateTime time = this.appPanel.getCurrentTimeWithShiftAwareness(this.dstDetectionMode)
           .plusMinutes(1) // ensure upcoming minute
           .truncatedTo(ChronoUnit.MINUTES);
 
@@ -332,7 +336,8 @@ public final class AppFrame extends JFrame {
 
       final List<MinuteBasedTimeSignalBits> recordList = new ArrayList<>();
       for (int i = 0; i < minutes; i++) {
-        recordList.add(minuteBasedTimeSignalWavRenderer.makeTimeSignalBits(time));
+        recordList.add(
+            minuteBasedTimeSignalWavRenderer.makeTimeSignalBits(time, this.dstDetectionMode));
         time = time.plusMinutes(1);
       }
       try {
@@ -555,10 +560,72 @@ public final class AppFrame extends JFrame {
       }
     });
 
+    final JCheckBoxMenuItem menuDstAutoDetect =
+        new JCheckBoxMenuItem("DST Auto Detect", GuiUtils.loadIcon("sun_cloudy.png"),
+            this.dstDetectionMode == DstDetection.DST_AUTODETECT);
+    menuDstAutoDetect.setToolTipText(
+        "Automatically apply summer/winter time changes when supported by protocol");
+
+    final JCheckBoxMenuItem menuForceDst =
+        new JCheckBoxMenuItem("Force DST", GuiUtils.loadIcon("weather_sun.png"),
+            this.dstDetectionMode != DstDetection.DST_AUTODETECT);
+    menuForceDst.setToolTipText("Force summer time when supported by protocol");
+
+    menuForceDst.addActionListener(e -> {
+      final boolean notAllowed = menuDstAutoDetect.isSelected();
+      if (notAllowed) {
+        menuForceDst.setEnabled(false);
+        return;
+      }
+      if (menuForceDst.isSelected()) {
+        this.dstDetectionMode = DstDetection.DST_FORCE_ON;
+      } else {
+        this.dstDetectionMode = DstDetection.DST_FORCE_OFF;
+      }
+      System.out.println("DST mode changed to " + this.dstDetectionMode);
+    });
+
+    menuDstAutoDetect.addActionListener(e -> {
+      if (menuDstAutoDetect.isSelected()) {
+        this.dstDetectionMode = DstDetection.DST_AUTODETECT;
+        menuForceDst.setEnabled(false);
+        menuForceDst.setSelected(false);
+      } else {
+        menuForceDst.setEnabled(true);
+        this.dstDetectionMode =
+            menuForceDst.isSelected() ? DstDetection.DST_FORCE_ON : DstDetection.DST_FORCE_OFF;
+      }
+      System.out.println("DST mode changed to " + this.dstDetectionMode);
+    });
+    menuSettings.add(menuDstAutoDetect);
+    menuSettings.add(menuForceDst);
+
+    menuMode.addMenuListener(new MenuListener() {
+      @Override
+      public void menuSelected(MenuEvent e) {
+        for (int i = 0; i < menuMode.getItemCount(); i++) {
+          menuMode.getMenuComponent(i).setEnabled(!appPanel.isInRendering());
+        }
+      }
+
+      @Override
+      public void menuDeselected(MenuEvent e) {
+
+      }
+
+      @Override
+      public void menuCanceled(MenuEvent e) {
+
+      }
+    });
+
     menuSettings.addMenuListener(new MenuListener() {
       @Override
       public void menuSelected(MenuEvent e) {
+        menuSourceNtpServer.setEnabled(!appPanel.isInRendering());
         menuOutputDevices.setEnabled(!appPanel.isInRendering());
+        menuDstAutoDetect.setEnabled(!appPanel.isInRendering());
+        menuForceDst.setEnabled(!appPanel.isInRendering() && !menuDstAutoDetect.isSelected());
       }
 
       @Override

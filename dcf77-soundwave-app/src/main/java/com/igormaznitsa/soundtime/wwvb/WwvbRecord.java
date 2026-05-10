@@ -3,6 +3,7 @@ package com.igormaznitsa.soundtime.wwvb;
 import static java.time.ZoneOffset.UTC;
 
 import com.igormaznitsa.soundtime.AbstractMinuteBasedTimeSignalRecord;
+import com.igormaznitsa.soundtime.DstDetection;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -15,18 +16,18 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
   public static final int DST_BEGINS_TODAY = 0b10;
   public static final int DST_IN_EFFECT = 0b11;
 
-  public WwvbRecord(final ZonedDateTime time) {
+  public WwvbRecord(final ZonedDateTime time, final DstDetection dstDetection) {
     this(
-        ensureTimezone(time, UTC).getHour(),
-        ensureTimezone(time, UTC).getMinute(),
+        time.getHour(),
+        time.getMinute(),
         time.getSecond(),
-        ensureTimezone(time, UTC).getDayOfYear(),
+        time.getDayOfYear(),
         0,
         0.0f,
-        ensureTimezone(time, UTC).getYear() % 100,
-        ensureTimezone(time, UTC).toLocalDate().isLeapYear(),
-        isLeapSecondAddedDuringTheMonth(ensureTimezone(time, UTC)),
-        calculateDstStatus(ensureTimezone(time, UTC))
+        time.getYear() % 100,
+        time.toLocalDate().isLeapYear(),
+        isLeapSecondAddedDuringTheMonth(time),
+        decodeDstDetection(time, dstDetection)
     );
   }
 
@@ -62,19 +63,30 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
     super(msb0 ? reverseLowestBits(wwvbBits, 60) : wwvbBits, 0);
   }
 
-  private static int calculateDstStatus(ZonedDateTime time) {
-    final ZonedDateTime zonedDateTime = ensureTimezone(time, UTC);
+  private static int decodeDstDetection(final ZonedDateTime time, final DstDetection dstDetection) {
+    switch (dstDetection) {
+      case DST_AUTODETECT:
+        return calculateDstStatus(time);
+      case DST_FORCE_ON:
+        return DST_IN_EFFECT;
+      case DST_FORCE_OFF:
+        return DST_NOT_IN_EFFECT;
+      default:
+        throw new Error("Unknown DstDetection: " + dstDetection);
+    }
+  }
 
+  private static int calculateDstStatus(ZonedDateTime time) {
     final int dstStatus;
-    switch (zonedDateTime.getMonth()) {
+    switch (time.getMonth()) {
       case JANUARY:
       case FEBRUARY:
       case DECEMBER:
         dstStatus = DST_NOT_IN_EFFECT;
         break;
       case MARCH: {
-        final int dayOfWeek = zonedDateTime.getDayOfWeek().getValue() % 7; // 0 - sunday
-        final int dayOfMonth = zonedDateTime.getDayOfMonth();
+        final int dayOfWeek = time.getDayOfWeek().getValue() % 7; // 0 - sunday
+        final int dayOfMonth = time.getDayOfMonth();
         final int sundays = (dayOfMonth + 6 - dayOfWeek) / 7;
 
         if (dayOfWeek == 0 && sundays == 2) {
@@ -96,8 +108,8 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
         dstStatus = DST_IN_EFFECT;
         break;
       case NOVEMBER: {
-        final int dayOfWeek = zonedDateTime.getDayOfWeek().getValue() % 7; // 0 - sunday
-        final int dayOfMonth = zonedDateTime.getDayOfMonth();
+        final int dayOfWeek = time.getDayOfWeek().getValue() % 7; // 0 - sunday
+        final int dayOfMonth = time.getDayOfMonth();
         final int sundays = (dayOfMonth + 6 - dayOfWeek) / 7;
         if (dayOfWeek == 0 && sundays == 1) {
           dstStatus = DST_ENDS_TODAY;
@@ -109,7 +121,7 @@ public final class WwvbRecord extends AbstractMinuteBasedTimeSignalRecord {
       }
       break;
       default:
-        throw new IllegalArgumentException("Unexpected month " + zonedDateTime.getMonth());
+        throw new IllegalArgumentException("Unexpected month " + time.getMonth());
     }
     return dstStatus;
   }

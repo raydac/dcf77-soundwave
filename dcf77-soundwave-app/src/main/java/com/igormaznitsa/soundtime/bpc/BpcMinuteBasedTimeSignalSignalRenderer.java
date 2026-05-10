@@ -1,6 +1,7 @@
 package com.igormaznitsa.soundtime.bpc;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.time.ZoneId;
@@ -23,7 +24,8 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   }
 
   @Override
-  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
+  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime,
+                                                      final DstDetection detection) {
     return new BpcRecord(zonedDateTime);
   }
 
@@ -99,12 +101,12 @@ public class BpcMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeSi
   }
 
   @Override
-  public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(this.getProtocolZoneId());
+  public ZonedDateTime getZonedTimeDateNow(final DstDetection dstDetection) {
+    return ZonedDateTime.now(this.getStandardSignalZoneId());
   }
 
   @Override
-  public ZoneId getProtocolZoneId() {
+  public ZoneId getStandardSignalZoneId() {
     return ZONE_CHN;
   }
 

@@ -1,18 +1,18 @@
 package com.igormaznitsa.gui;
 
+import static java.util.Objects.requireNonNull;
 import static javax.swing.BorderFactory.createBevelBorder;
 import static javax.swing.BorderFactory.createCompoundBorder;
 import static javax.swing.BorderFactory.createEmptyBorder;
 
+import com.igormaznitsa.soundtime.DstDetection;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -25,10 +25,12 @@ public class TimePanel extends JPanel {
   private final JLabel labelTimeDate;
   private final Supplier<TimeDateIndicationProvider> timeSupplier;
   private final Supplier<TimeOffsetProvider> timeOffsetProviderSupplier;
+  private final Supplier<DstDetection> dstDetectionSupplier;
   private boolean showSecondsChange = true;
 
   public TimePanel(final Supplier<TimeDateIndicationProvider> timeSupplier,
-                   final Supplier<TimeOffsetProvider> timeOffsetSupplier) {
+                   final Supplier<TimeOffsetProvider> timeOffsetSupplier,
+                   final Supplier<DstDetection> dstDetectionSupplier) {
     super(new GridBagLayout());
     this.setBorder(
         createCompoundBorder(
@@ -37,9 +39,11 @@ public class TimePanel extends JPanel {
         )
     );
 
+    this.dstDetectionSupplier = requireNonNull(dstDetectionSupplier);
+
     this.timeOffsetProviderSupplier =
         timeOffsetSupplier == null ? () -> time -> time : timeOffsetSupplier;
-    this.timeSupplier = Objects.requireNonNull(timeSupplier);
+    this.timeSupplier = requireNonNull(timeSupplier);
 
     GridBagConstraints gbc;
 
@@ -91,7 +95,8 @@ public class TimePanel extends JPanel {
         this.labelCest.setText("....");
         return;
       }
-      final ZonedDateTime time = provider.getZonedTimeDateNow();
+      final ZonedDateTime time =
+          provider.getZonedTimeDateNow(this.dstDetectionSupplier.get());
 
       final int hours = time.getHour();
       final int minute = time.getMinute();
@@ -126,12 +131,9 @@ public class TimePanel extends JPanel {
     final String protocolName = this.timeSupplier.get().getProtocolId();
 
     String zoneId =
-        this.timeSupplier.get().getProtocolZoneId().getId().trim().toUpperCase(Locale.ROOT);
+        this.timeSupplier.get().getStandardSignalZoneId().getId().trim().toUpperCase(Locale.ROOT);
     if ("z".equalsIgnoreCase(zoneId)) {
       zoneId = "UTC";
-    } else if (zoneId.equalsIgnoreCase("CET") &&
-        this.timeSupplier.get().getProtocolZoneId().getRules().isDaylightSavings(Instant.now())) {
-      zoneId = "CEST";
     }
 
     return offsetTimeText + " " + protocolName + " (" + zoneId + ")";

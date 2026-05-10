@@ -3,6 +3,7 @@ package com.igormaznitsa.soundtime.wwvb;
 import static java.time.ZoneOffset.UTC;
 
 import com.igormaznitsa.soundtime.AmplitudeSoundSignalRenderer;
+import com.igormaznitsa.soundtime.DstDetection;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalBits;
 import com.igormaznitsa.soundtime.MinuteBasedTimeSignalWavRenderer;
 import java.time.ZoneId;
@@ -23,8 +24,9 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
   }
 
   @Override
-  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime) {
-    return new WwvbRecord(zonedDateTime);
+  public MinuteBasedTimeSignalBits makeTimeSignalBits(final ZonedDateTime zonedDateTime,
+                                                      final DstDetection dstDetection) {
+    return new WwvbRecord(zonedDateTime, dstDetection);
   }
 
   @Override
@@ -80,12 +82,12 @@ public class WwvbMinuteBasedTimeSignalSignalRenderer implements MinuteBasedTimeS
   }
 
   @Override
-  public ZonedDateTime getZonedTimeDateNow() {
-    return ZonedDateTime.now(this.getProtocolZoneId());
+  public ZonedDateTime getZonedTimeDateNow(final DstDetection dstDetection) {
+    return ZonedDateTime.now(this.getStandardSignalZoneId());
   }
 
   @Override
-  public ZoneId getProtocolZoneId() {
+  public ZoneId getStandardSignalZoneId() {
     return UTC;
   }
 

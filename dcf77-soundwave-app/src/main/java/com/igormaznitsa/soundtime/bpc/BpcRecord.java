@@ -11,12 +11,12 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   public BpcRecord(final ZonedDateTime time) {
     this(
-        ensureTimezone(time, ZONE_CHN).getHour(),
-        ensureTimezone(time, ZONE_CHN).getMinute(),
-        ensureTimezone(time, ZONE_CHN).getDayOfWeek().getValue(),
-        ensureTimezone(time, ZONE_CHN).getDayOfMonth(),
-        ensureTimezone(time, ZONE_CHN).getMonth().getValue(),
-        ensureTimezone(time, ZONE_CHN).getYear() % 100,
+        time.getHour(),
+        time.getMinute(),
+        time.getDayOfWeek().getValue(),
+        time.getDayOfMonth(),
+        time.getMonth().getValue(),
+        time.getYear() % 100,
         time.getSecond()
     );
   }

@@ -16,7 +16,8 @@ public interface MinuteBasedTimeSignalWavRenderer extends TimeDateIndicationProv
 
   double getAmplitudeDeviation();
 
-  MinuteBasedTimeSignalBits makeTimeSignalBits(ZonedDateTime zonedDateTime);
+  MinuteBasedTimeSignalBits makeTimeSignalBits(ZonedDateTime zonedDateTime,
+                                               DstDetection dstDetection);
 
   List<Integer> getAllowedCarrierFrequencies();
 

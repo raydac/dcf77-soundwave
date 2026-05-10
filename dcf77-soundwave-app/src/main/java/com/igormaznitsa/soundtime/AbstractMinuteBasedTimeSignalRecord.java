@@ -1,8 +1,6 @@
 package com.igormaznitsa.soundtime;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Objects;
 
 public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBasedTimeSignalBits {
@@ -141,13 +139,6 @@ public abstract class AbstractMinuteBasedTimeSignalRecord implements MinuteBased
       src >>>= 1L;
     }
     return acc;
-  }
-
-  public static ZonedDateTime ensureTimezone(final ZonedDateTime time, final ZoneId zoneId) {
-    if (time.getZone().equals(zoneId)) {
-      return time;
-    }
-    return time.withZoneSameInstant(zoneId);
   }
 
   protected static long setBits(

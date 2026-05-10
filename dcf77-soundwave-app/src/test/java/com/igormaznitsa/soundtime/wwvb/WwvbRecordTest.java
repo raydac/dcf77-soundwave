@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.igormaznitsa.soundtime.DstDetection;
 import java.time.Month;
 import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class WwvbRecordTest {
         32,
         0,
         UTC
-    ));
+    ), DstDetection.DST_AUTODETECT);
     assertTrue(record.isValid());
 
     assertEquals(30, record.getMinutes());
@@ -71,7 +72,7 @@ class WwvbRecordTest {
         44,
         0,
         UTC
-    ));
+    ), DstDetection.DST_AUTODETECT);
     assertTrue(record.isValid());
 
     assertEquals(30, record.getMinutes());
@@ -97,7 +98,7 @@ class WwvbRecordTest {
         11,
         0,
         UTC
-    ));
+    ), DstDetection.DST_AUTODETECT);
     assertTrue(record.isValid());
 
     assertEquals(10, record.getMinutes());
@@ -123,7 +124,7 @@ class WwvbRecordTest {
         32,
         0,
         UTC
-    ));
+    ), DstDetection.DST_AUTODETECT);
     assertTrue(record.isValid());
 
     assertEquals(10, record.getMinutes());
