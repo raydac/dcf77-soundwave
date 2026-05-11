@@ -397,7 +397,7 @@ public final class AppFrame extends JFrame {
     menuDoDonate.addActionListener(a -> {
       try {
         GuiUtils.browseURI(new URI(
-                "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=AHWJHJFBAWGL2"),
+                "https://www.arthursacresanimalsanctuary.org/donate"),
             true);
       } catch (Exception ex) {
         // ignore

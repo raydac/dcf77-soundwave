@@ -1,5 +1,8 @@
-1.1.2 (SNAPSHOT)
+1.2.0 (SNAPSHOT)
+ - in Settings menu added way to turn off auto-detection of DST for signals allowed such feature [#2](https://github.com/raydac/dcf77-soundwave/issues/2)
+ - added button "UTC" to force use of UTC time zone instead of standard ones for signal [#2](https://github.com/raydac/dcf77-soundwave/issues/2)
  - added button "+/-" to inject custom time shift into translating signal [#2](https://github.com/raydac/dcf77-soundwave/issues/2)
+ - updated dependencies
  - updated embedded JDK to 26.0.1+10
 
 1.1.1 (16-feb-2026)
