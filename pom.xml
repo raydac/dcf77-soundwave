@@ -56,9 +56,17 @@
         <maven.compiler.release>11</maven.compiler.release>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>publish</id>
+            <modules>
+                <module>dcf77-soundwave-win-launcher</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <modules>
         <module>dcf77-soundwave-app</module>
-        <module>dcf77-soundwave-win-launcher</module>
     </modules>
 
 
