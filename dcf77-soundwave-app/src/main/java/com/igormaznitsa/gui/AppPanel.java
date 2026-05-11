@@ -175,11 +175,11 @@ public class AppPanel extends JPanel {
           final int selectedSeconds = panel.getSeconds();
           this.lastSelectedTimeOffsetInSeconds = selectedSeconds;
 
-          final Function<ZonedDateTime, ZonedDateTime> processor =
-              selectedSeconds < 0 ? z -> z.minusSeconds(selectedSeconds) :
-                  z -> z.plusSeconds(selectedSeconds);
-
           final int absSeconds = Math.abs(selectedSeconds);
+          final Function<ZonedDateTime, ZonedDateTime> processor =
+              selectedSeconds < 0 ? z -> z.minusSeconds(absSeconds) :
+                  z -> z.plusSeconds(absSeconds);
+
           final String offsetText = String.format(
               "SHFT:%s%02d:%02d ",
               selectedSeconds < 0 ? "-" : "+",
@@ -325,6 +325,7 @@ public class AppPanel extends JPanel {
           JOptionPane.showMessageDialog(this, "No selected output channel!", "No output",
               JOptionPane.WARNING_MESSAGE);
           this.buttonStartStop.setSelected(false);
+          return;
         }
         this.startRendering(lineInfo, dstDetectionSupplier.get());
       } else {
