@@ -1,11 +1,11 @@
 ![Banner](/assets/banner-dcf777.jpg)   
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%20License%202.0-green.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Java 11+](https://img.shields.io/badge/java-11%2b-green.svg)](https://bell-sw.com/pages/downloads/#jdk-21-lts)   
-[![Arthur's acres sanctuary donation](assets/arthur_sanctuary_banner.png)](https://www.arthursacresanimalsanctuary.org/donate)
+[![Arthur's Acres Animal Sanctuary — donate](assets/arthur_sanctuary_banner.png)](https://www.arthursacresanimalsanctuary.org/donate)
 
 # Central European Time DCF77 Soundwave Generator
 
-## Pre-word
+## Foreword
 
 If you've ever owned a radio-controlled wrist watch, you probably know how convenient it is to have a device that always shows
 the exact time without manual adjustment. These watches synchronize themselves with atomic time broadcasts, one of the
@@ -15,7 +15,7 @@ Unfortunately, for those of us living in places like [Estonia](https://en.wikipe
 to distance and geographical interference. That was exactly my experience after getting a radio-controlled clock. I
 quickly realized that it wasn’t going to sync reliably with the official signal.
 
-Since 1.1.0 version, the application supports listed time signal formats:
+Since version 1.1.0, the application supports the following time-signal formats:
 
 - __DCF77:__ German longwave time signal broadcast from Mainflingen, used mainly in Europe.
 - __JJY:__ Japanese time signal transmitted from two locations, covering Japan and nearby regions.
@@ -36,31 +36,32 @@ signal if placed near the audio source (like headphones or a speaker).
 
 ![Headphones as an antenna](assets/dcf77_application_in_action.jpg)
 
-The result is a handy desktop free utility that lets you synchronize your radio-controlled wrist watch without needing a
-strong
-over-the-air signal—particularly useful if you live in a region with poor [DCF77](https://en.wikipedia.org/wiki/DCF77) reception or want to test clock
+The result is a handy, free desktop utility that lets you synchronize your radio-controlled wrist watch without needing
+a
+strong over-the-air signal—particularly useful if you live in a region with
+poor [DCF77](https://en.wikipedia.org/wiki/DCF77) reception or want to test clock
 synchronization indoors.
 
 ## Application
 
 ![Application look](assets/applook.png)
 
-The application is written in [Java](https://en.wikipedia.org/wiki/Java_(programming_language)) and
+The application is written in [Java](https://en.wikipedia.org/wiki/Java_%28programming_language%29) and
 requires [Java 11](https://bell-sw.com/pages/downloads/#jdk-21-lts) or later to be installed on your computer. For
 convenience,
 there are also build versions that come bundled with a compatible Java runtime, so you don't have to install Java
 separately if you don’t want to.
 
-| OS                                           | Download link                                                                                                                                               | 
-|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ![Windows](assets/icons/win64x64.png)        | __[Archive with JRE for Windows amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-windows-jdk-amd64.zip)__ |
-| ![Windows](assets/icons/win64x64.png)        | __[Archive without JRE for Windows](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0.exe)__                      |
-| ![OSX](assets/icons/macos64x64.png)          | __[Archive with JRE for MacOS amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-macos-jdk-amd64.zip)__     |
-| ![OSX Arm64](assets/icons/macosarm64x64.png) | __[Archive with JRE for MacOS arm64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-macos-jdk-aarch64.zip)__   |
-| ![OSX](assets/icons/macos64x64.png)          | __[DMG package for MacOS (no JRE)](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app_1.2.0.dmg)__                       |
-| ![Linux](assets/icons/linux64x64.png)        | __[Archive with JRE for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-linux-jdk-amd64.tar.gz)__  |
-| ![Linux](assets/icons/appimage64x64.png)     | __[AppImage for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-x86_64.AppImage)__                 |
-| ![Java](assets/icons/java64x64.png)          | __[Cross-platform JAR file](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0.jar)__                              | 
+| OS                                             | Download link                                                                                                                                               | 
+|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![Windows](assets/icons/win64x64.png)          | __[Archive with JRE for Windows amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-windows-jdk-amd64.zip)__ |
+| ![Windows](assets/icons/win64x64.png)          | __[Archive without JRE for Windows](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0.exe)__                      |
+| ![macOS](assets/icons/macos64x64.png)          | __[Archive with JRE for macOS amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-macos-jdk-amd64.zip)__     |
+| ![macOS Arm64](assets/icons/macosarm64x64.png) | __[Archive with JRE for macOS arm64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-macos-jdk-aarch64.zip)__   |
+| ![macOS](assets/icons/macos64x64.png)          | __[DMG package for macOS (no JRE)](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app_1.2.0.dmg)__                       |
+| ![Linux](assets/icons/linux64x64.png)          | __[Archive with JRE for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-linux-jdk-amd64.tar.gz)__  |
+| ![Linux](assets/icons/appimage64x64.png)       | __[AppImage for Linux amd64](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0-x86_64.AppImage)__                 |
+| ![Java](assets/icons/java64x64.png)            | __[Cross-platform JAR file](https://github.com/raydac/dcf77-soundwave/releases/download/1.2.0/dcf77-soundwave-app-1.2.0.jar)__                              | 
 
 __[Full set of latest pre-built applications](https://github.com/raydac/dcf77-soundwave/releases/latest)__
 
@@ -74,7 +75,7 @@ distributions will be:
     mvn clean install
   ```
 
-- build with distributes
+- build with distribution packages (bundled JRE, installers, etc.)
 
   ```bash
     mvn clean install -Ppublish,appimage
@@ -85,20 +86,35 @@ for signal generation. These include:
 
 - __Signal waveform__ – This affects the harmonic profile and can influence how well your wrist watch picks up the generated
   signal. 
-- __Carrier frequency__ – The base frequency used for the audio signal, ideally a multiple or harmonic of 77.5 kHz.
+- __Carrier frequency__ – The audio carrier offered for the selected mode (a harmonic-related choice so the watch
+  receiver can lock).
 - __Sample rate__ – The audio output's sampling frequency, which impacts the fidelity and quality of the harmonics.
 
 ![GUI elements](assets/gui_elements.png)
 
-The application reads the current system time, so it’s important to make sure your computer’s clock is accurate. For
-best results, synchronize your PC clock with an NTP server before starting.
+### Menus and other features
 
-To begin generating the signal, all you have to do is press the PLAY button. The application will then emit a modulated
-audio signal based on the current time and selected settings. If you need to change the audio output device (e.g.,
-switch from speakers to headphones), you can do that via the Settings menu.
+- __Mode__ — Switch between __DCF77__, __JJY__, __WWVB__, and __BPC__; each mode exposes its own carrier frequencies and
+  uses the correct civil time zone for “live” time (unless you override it below).
+- __Settings → Time sources__ — Use the __local__ clock or an __NTP__ pool/server; the window title can show which NTP
+  host is active. Pick a reliable source for stable encoding.
+- __Settings → Output device__ — Choose the audio output line used for playback. Open the submenu to refresh the list of
+  mixers/devices.
+- __Settings → DST__ — Where the protocol carries daylight-saving flags (__DCF77__, __WWVB__): __DST auto detect__
+  follows zone rules, or turn auto off and __Force DST__ on/off for testing.
+- __Right-hand toggles__ (beside waveform / sample rate / carrier):
+  - __Custom time__ (`[`): pick a fixed date and time for encoding instead of the live clock (useful for tests).
+  - __UTC__: use the same clock instant but expressed in __UTC__ for display and minute boundaries (pairs with custom
+    time if you need a fixed UTC moment).
+  - __Time shift__ (➕/➖): apply a constant offset up to __±24 hours__ to the time used for encoding and for __File →
+    Save as…__.
+- __File → Save as…__ — Write a __WAV__ file of __1–60__ consecutive encoded minutes with the same waveform, carrier,
+  sample rate, and time options as live playback.
+- __Help__ — Opens the built-in HTML guide (also covers UTC, time shift, and custom time in more detail).
+- __Help → About__ — Shows the __application version__ from the build (not a hard-coded string).
 
-In addition to real-time signal generation, the app also supports:
+Press the __play__ button to start live generation and again to stop. While playing, some settings are locked until you
+stop. For output routing you can use __Settings → Output device__ or your OS sound preferences.
 
-- Setting a custom time manually, which is useful for testing or calibration.
-- Saving the generated signal as a WAV file of a specified duration, which can be played back later or used in other
-  scenarios.
+More detail on optional time controls is in the in-app __Help__; the same topics are summarized in the repository under
+`dcf77-soundwave-app/src/main/resources/help/help.html`.
