@@ -256,18 +256,9 @@ public class AmplitudeSoundSignalRenderer {
     final SourceDataLine line = this.sourceDataLine.get();
     if (line != null) {
       synchronized (line) {
-        try {
-          line.stop();
-        } catch (Exception ignored) {
-        }
-        try {
-          line.flush();
-        } catch (Exception ignored) {
-        }
-        try {
-          line.close();
-        } catch (Exception ignored) {
-        }
+        this.safeStopLine(line);
+        this.safeFlushLine(line);
+        this.safeCloseLine(line);
       }
     }
   }
@@ -282,23 +273,9 @@ public class AmplitudeSoundSignalRenderer {
           thread.interrupt();
         }
         synchronized (line) {
-          try {
-            try {
-              line.stop();
-            } catch (Exception ignored) {
-            }
-            try {
-              line.flush();
-            } catch (Exception ignored) {
-            }
-
-            try {
-              line.close();
-            } catch (Exception ignored) {
-            }
-          } finally {
-            line.close();
-          }
+          this.safeStopLine(line);
+          this.safeFlushLine(line);
+          this.safeCloseLine(line);
         }
         if (thread != null) {
           try {
@@ -308,6 +285,30 @@ public class AmplitudeSoundSignalRenderer {
           }
         }
       }
+    }
+  }
+
+  private void safeStopLine(final SourceDataLine line) {
+    try {
+      line.stop();
+    } catch (RuntimeException ex) {
+      System.err.println("Failed to stop SourceDataLine: " + ex.getMessage());
+    }
+  }
+
+  private void safeFlushLine(final SourceDataLine line) {
+    try {
+      line.flush();
+    } catch (RuntimeException ex) {
+      System.err.println("Failed to flush SourceDataLine: " + ex.getMessage());
+    }
+  }
+
+  private void safeCloseLine(final SourceDataLine line) {
+    try {
+      line.close();
+    } catch (RuntimeException ex) {
+      System.err.println("Failed to close SourceDataLine: " + ex.getMessage());
     }
   }
 

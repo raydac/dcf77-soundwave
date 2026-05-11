@@ -155,19 +155,9 @@ public final class AppFrame extends JFrame {
     this.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        final NTPUDPClient ntpudpClient = AppFrame.this.currentNtpUDpClient.getAndSet(null);
-        if (ntpudpClient != null) {
-          try {
-            System.out.println("Closing NTP client");
-            ntpudpClient.close();
-          } catch (Exception ignore) {
-          }
-        }
+        AppFrame.this.closeCurrentNtpClient();
         AppFrame.this.timerNtpRefresh.shutdownNow();
-        var scheduledFuture = AppFrame.this.ntpScheduledFuture.getAndSet(null);
-        if (scheduledFuture != null) {
-          scheduledFuture.cancel(true);
-        }
+        AppFrame.this.cancelCurrentNtpRefreshTask(true);
         AppFrame.this.appPanel.dispose();
         AppFrame.this.timer.stop();
         AppFrame.this.dispose();
@@ -284,6 +274,25 @@ public final class AppFrame extends JFrame {
 
   private MinuteBasedTimeSignalWavRenderer getCurrentMinuteWavDataRenderer() {
     return this.currentTimeSignalRenderer.get();
+  }
+
+  private void cancelCurrentNtpRefreshTask(final boolean mayInterruptIfRunning) {
+    final ScheduledFuture<?> scheduledFuture = this.ntpScheduledFuture.getAndSet(null);
+    if (scheduledFuture != null) {
+      scheduledFuture.cancel(mayInterruptIfRunning);
+    }
+  }
+
+  private void closeCurrentNtpClient() {
+    final NTPUDPClient ntpudpClient = this.currentNtpUDpClient.getAndSet(null);
+    if (ntpudpClient != null) {
+      try {
+        System.out.println("Closing NTP client");
+        ntpudpClient.close();
+      } catch (RuntimeException ex) {
+        System.err.println("Failed to close NTP client: " + ex.getMessage());
+      }
+    }
   }
 
   private void saveAs() {
@@ -436,19 +445,9 @@ public final class AppFrame extends JFrame {
             AppFrame.this.setTitle(TITLE);
             System.out.println("Selected time source: " + timeSource);
             ntpErrorCounter.set(MAX_NTP_ERROR_COUNTER);
-            var future = this.ntpScheduledFuture.getAndSet(null);
-            if (future != null) {
-              future.cancel(true);
-            }
+            this.cancelCurrentNtpRefreshTask(true);
             final ScheduledFuture<?> newFuture = this.timerNtpRefresh.scheduleAtFixedRate(() -> {
-                  final NTPUDPClient ntpudpClient = this.currentNtpUDpClient.getAndSet(null);
-                  if (ntpudpClient != null) {
-                    try {
-                      System.out.println("Closing NTP client");
-                      ntpudpClient.close();
-                    } catch (Exception ignore) {
-                    }
-                  }
+                  this.closeCurrentNtpClient();
                   this.currentTime.set(Instant.now());
                 },
                 0L, NTP_REFRESH_DELAY_MS, TimeUnit.MILLISECONDS);
@@ -465,10 +464,7 @@ public final class AppFrame extends JFrame {
               AppFrame.this.setTitle(TITLE + " (ntp://" + timeSource.address + ')');
               System.out.println("Selected NTP server: " + timeSource);
 
-              var future = this.ntpScheduledFuture.getAndSet(null);
-              if (future != null) {
-                future.cancel(true);
-              }
+              this.cancelCurrentNtpRefreshTask(true);
               final ScheduledFuture<?> newFuture =
                   this.timerNtpRefresh.scheduleAtFixedRate(() -> {
                     long time;
@@ -487,8 +483,7 @@ public final class AppFrame extends JFrame {
                     }
 
                     if (ntpudpClient == null) {
-                      var thisFuture = this.ntpScheduledFuture.get();
-                      thisFuture.cancel(false);
+                      this.cancelCurrentNtpRefreshTask(false);
                       SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(AppFrame.this,
                             "Can't initialize NTP client", "Error",
@@ -503,8 +498,7 @@ public final class AppFrame extends JFrame {
                         time = System.currentTimeMillis() + info.getOffset();
                       } catch (Exception ex) {
                         if (ntpErrorCounter.decrementAndGet() <= 0) {
-                          var thisFuture = this.ntpScheduledFuture.get();
-                          thisFuture.cancel(false);
+                          this.cancelCurrentNtpRefreshTask(false);
                           SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(AppFrame.this,
                                 "Can't get NTP packets from " + timeSource.address + ": " +

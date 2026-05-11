@@ -62,22 +62,22 @@ public final class GuiUtils {
       if (desktop.isSupported(Desktop.Action.BROWSE)) {
         try {
           desktop.browse(url.toURI());
-        } catch (Exception x) {
-          // ignore
+        } catch (Exception ex) {
+          System.err.println("Can't browse URL through Desktop API: " + ex.getMessage());
         }
       } else if (SystemUtils.IS_OS_LINUX) {
         final Runtime runtime = Runtime.getRuntime();
         try {
           runtime.exec("xdg-open " + url);
         } catch (IOException e) {
-          // ignore
+          System.err.println("Can't open URL through xdg-open: " + e.getMessage());
         }
       } else if (SystemUtils.IS_OS_MAC) {
         final Runtime runtime = Runtime.getRuntime();
         try {
           runtime.exec("open " + url);
         } catch (IOException e) {
-          // ignore
+          System.err.println("Can't open URL through open command: " + e.getMessage());
         }
       }
     }
