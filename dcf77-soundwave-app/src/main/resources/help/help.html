@@ -2,16 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DCF77 Signal Generator Instructions</title>
+    <title>DCF77 Signal Generator — Help</title>
 </head>
 <body>
 <h1>DCF77 Signal Generator</h1>
 
 <p>
-    This application is designed to emulate the long-wave time signals by generating it in the audible frequency range.
-    It
-    allows you to synchronize radio-controlled wristwatches using your computer's audio system. It supports DCF77, JJY,
-    WWVB amd BCP signals.
+    This application emulates long-wave time-code stations by generating their patterns in the audible frequency range.
+    You can use it to synchronize radio-controlled watches through your computer’s audio output. It supports
+    <b>DCF77</b>, <b>JJY</b>, <b>WWVB</b>, and <b>BPC</b> formats (select the mode from the <i>Mode</i> menu).
 </p>
 
 <p>
@@ -30,49 +29,92 @@
     <b>BPC:</b> Chinese time signal transmitted from Shangqiu, covering China and surrounding areas.
 </p>
 
+<h2>Optional: custom time, UTC, and time shift</h2>
 
-<h2>Step-by-Step Instructions</h2>
+<p>
+    The right-hand column has extra toggles beside waveform, sample rate, and carrier frequency. They change
+    <i>which instant in time</i> is encoded into the signal; they do not switch the protocol (that remains whatever
+    you chose under <i>Mode</i>).
+</p>
+
+<ul>
+    <li>
+        <b>Custom time (<code>[</code>):</b> When enabled, you pick a fixed date and time in a dialog. The app then
+        encodes that moment instead of the live clock (the main time panel turns a different color to show “fixed”
+        mode). Turn it off to return to the live time source (see <i>Settings</i> → <i>Time sources</i>).
+    </li>
+    <li>
+        <b>UTC:</b> When enabled <i>without</i> custom time, the same clock instant as your selected time source is
+        shown and used in <b>UTC</b> (the status line shows <code>UTC</code> instead of the signal’s usual zone, e.g.
+        Europe/Berlin for DCF77). When custom time is on, <b>UTC</b> means your chosen date/time is interpreted and
+        held in UTC. Use this when you want the encoded minute boundaries aligned with UTC rather than the station’s
+        default civil time zone.
+    </li>
+    <li>
+        <b>Time shift (+/−, labeled ➕/➖ on the button):</b> Applies a constant offset to the time used for encoding
+        (and for <i>File</i> → <i>Save as…</i>). After you press the button, choose sign (+/−) and an offset up to
+        24 hours in the dialog; confirm with OK. A non-zero offset appears in the status line as
+        <code>SHFT:±HH:MM</code>. To clear the shift, press the button again to turn it off, or confirm the dialog with
+        offset 0 (the toggle turns off if you cancel or leave offset at zero).
+    </li>
+</ul>
+
+<p>
+    <b>Tip:</b> You can combine <b>UTC</b> and <b>time shift</b> with live or custom time. The order of effects matches
+    what you see on the panel: the app applies your time-source/custom-time/UTC choice, then applies the shift when
+    building each minute.
+</p>
+
+<h2>Step-by-step instructions</h2>
 
 <ol>
     <li>
         <strong>Select the signal mode:</strong>
-        Open the menu <i>Mode</i> and select the needed signal format.
+        Open the <i>Mode</i> menu and choose the format you need (DCF77, JJY, WWVB, or BPC).
     </li>
     <li>
         <strong>Select the audio output device:</strong>
-        Open your system’s sound settings and make sure your computer is configured to use headphones or a similar audio
-        output device. This will be the channel used to transmit the simulated signal.
+        Use <i>Settings</i> → <i>Output device</i> and pick the line that corresponds to the headphones or cable you
+        will use. Alternatively, use your operating system’s sound settings so the default output is the device you
+        want.
     </li>
     <li>
         <strong>Configure the signal:</strong>
-        In the application interface, choose the desired signal waveform (e.g., square or sine wave), set the modulation
-        frequency, and select the appropriate carrier frequency for the signal emulation.
+        In the application window, choose the waveform (sine, square, or triangle), the sample rate (44.1 / 48 / 96
+        kHz), and the carrier frequency offered for the current mode.
     </li>
     <li>
         <strong>Position your watch:</strong>
-        Place the radio-controlled wristwatch directly onto the headphones. Make sure the back of the watch is in
-        contact with the speaker membrane, as the audio signal will act as a magnetic field transmitter.
+        Place the radio-controlled watch on the headphones so the back of the case sits on the speaker driver; the
+        audio acts as a coupling path for the modulated tone.
     </li>
     <li>
         <strong>Start signal generation:</strong>
-        Press the <em>Play</em> button in the application to begin generating the signal.
+        Press the play button to start; press again to stop. While playing, some menus are disabled until you stop.
     </li>
     <li>
         <strong>Wait for synchronization:</strong>
-        Allow the signal to play continuously. Synchronization may take some time depending on the model and sensitivity
-        of the watch. Typically, the process takes between 5 and 15 minutes.
+        Leave the signal running. Depending on the watch model and volume, synchronization can take on the order of
+        several minutes (often roughly 5–15 minutes).
     </li>
     <li>
         <strong>Confirm synchronization:</strong>
-        Once the watch has received the signal, it should automatically adjust its time to the correct value. You may
-        notice the hands moving or the digital display updating.
+        When the watch has locked to the code, it should set itself to the time being transmitted. You may see hands
+        move or digits update.
     </li>
 </ol>
 
 <p>
-    Please note that successful synchronization depends on various factors including watch model, signal quality, volume
-    level, and how well the watch is positioned on the audio source. Experiment with these variables if the
-    synchronization does not occur on the first attempt.
+    Success depends on watch model, volume, waveform choice, carrier choice, and mechanical coupling to the speaker.
+    If nothing happens, try small changes to those factors before assuming a fault.
 </p>
+
+<h2>Recording to a file</h2>
+
+<p>
+    Use <i>File</i> → <i>Save as…</i> to write a WAV file of several consecutive encoded minutes. The dialog asks how
+    many minutes to render (1–60). The same time options (custom time, UTC, time shift) apply as for live playback.
+</p>
+
 </body>
 </html>
