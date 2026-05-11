@@ -3,6 +3,7 @@ package com.igormaznitsa.soundtime.bpc;
 import static com.igormaznitsa.soundtime.bpc.BpcMinuteBasedTimeSignalSignalRenderer.ZONE_CHN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Month;
@@ -130,6 +131,46 @@ class BpcRecordTest {
     assertEquals(
         "000000101001100101100000100111001010000001000010100110010111000010011100101000001000001010011001011100001001110010100000",
         record.toBinaryString(false));
+  }
+
+  @Test
+  void testMidnightAndNoonRoundTrip() {
+    final BpcRecord midnight = new BpcRecord(
+        ZonedDateTime.of(2026, 1, 10, 0, 15, 0, 0, ZONE_CHN));
+    assertTrue(midnight.isValid());
+    assertFalse(midnight.isPM());
+    assertEquals(12, midnight.getHours());
+    assertEquals(0, midnight.extractSourceTime().getHour());
+
+    final BpcRecord noon = new BpcRecord(
+        ZonedDateTime.of(2026, 1, 10, 12, 15, 0, 0, ZONE_CHN));
+    assertTrue(noon.isValid());
+    assertTrue(noon.isPM());
+    assertEquals(12, noon.getHours());
+    assertEquals(12, noon.extractSourceTime().getHour());
+  }
+
+  @Test
+  void testRejectInvalidConstructorRanges() {
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(24, 0, 1, 1, 1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(0, 60, 1, 1, 1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(0, 0, 0, 1, 1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(0, 0, 1, 0, 1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(0, 0, 1, 1, 13, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new BpcRecord(0, 0, 1, 1, 1, 100, 0));
+  }
+
+  @Test
+  void testInvalidHourPayloadDetectedByIsValid() {
+    final BpcRecord valid = new BpcRecord(
+        ZonedDateTime.of(2026, 1, 10, 9, 34, 0, 0, ZONE_CHN));
+    assertTrue(valid.isValid());
+
+    final StringBuilder damagedBits = new StringBuilder(valid.toBinaryString(false));
+    damagedBits.replace(4, 8, "0000");
+
+    final BpcRecord damaged = new BpcRecord(damagedBits.toString());
+    assertFalse(damaged.isValid());
   }
 
 }

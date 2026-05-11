@@ -534,11 +534,15 @@ public final class AppFrame extends JFrame {
       @Override
       public void menuSelected(MenuEvent e) {
         menuOutputDevices.removeAll();
+        final ButtonGroup outputDeviceButtonGroup = new ButtonGroup();
         final OutputLineInfo current = currentMixer.get();
         final Mixer.Info currentMixer = current == null ? null : current.mixerInfo;
         getOutputLinesWithNames().forEach(x -> {
           final JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(x.mixerInfo.getName(),
               x.mixerInfo.equals(currentMixer));
+          menuItem.setToolTipText(x.mixerInfo.getDescription());
+          menuItem.addActionListener(a -> AppFrame.this.currentMixer.set(x));
+          outputDeviceButtonGroup.add(menuItem);
           menuOutputDevices.add(menuItem);
         });
       }

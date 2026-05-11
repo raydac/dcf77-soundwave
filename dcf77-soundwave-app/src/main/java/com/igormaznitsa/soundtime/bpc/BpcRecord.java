@@ -31,13 +31,21 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
       final int second
   ) {
     super(-1L, second);
+    final int checkedHour = requireInclusiveRange(hour, 0, 23, "Hour");
+    final int checkedMinute = requireInclusiveRange(minute, 0, 59, "Minute");
+    final int checkedDayOfWeek = requireInclusiveRange(dayOfWeek, 1, 7, "Day of week");
+    final int checkedDayOfMonth = requireInclusiveRange(dayOfMonth, 1, 31, "Day of month");
+    final int checkedMonth = requireInclusiveRange(month, 1, 12, "Month");
+    final int checkedYearWithinCentury = requireInclusiveRange(yearWithinCentury, 0, 99,
+        "Year within century");
+
     this.bcpBitString = new BcpBitString(makeTimePacketVersion(
-        hour,
-        minute,
-        dayOfWeek,
-        dayOfMonth,
-        month,
-        yearWithinCentury
+        checkedHour,
+        checkedMinute,
+        checkedDayOfWeek,
+        checkedDayOfMonth,
+        checkedMonth,
+        checkedYearWithinCentury
     ));
   }
 
@@ -79,7 +87,7 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
       buffer.append("00");
 
       // hours
-      writeBinaryInt(buffer, hours % 12, 4);
+      writeBinaryInt(buffer, toBpcHour(hours), 4);
 
       // minute
       writeBinaryInt(buffer, minutes, 6);
@@ -91,7 +99,7 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
       writeBinaryInt(buffer, dayOfWeek, 3);
 
       // PM
-      buffer.append(hours > 12 ? '1' : '0');
+      buffer.append(hours >= 12 ? '1' : '0');
 
       // P1
       buffer.append(isEven(buffer, offset, offset + 18) ? '1' : '0');
@@ -144,6 +152,36 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
     return count % 2 != 0;
   }
 
+  private static int toBpcHour(final int hours) {
+    if (hours < 0 || hours > 23) {
+      throw new IllegalArgumentException("Hour must be 0..23: " + hours);
+    }
+    final int hourIn12 = hours % 12;
+    return hourIn12 == 0 ? 12 : hourIn12;
+  }
+
+  private static int to24Hour(final int hourIn12, final boolean pm) {
+    if (hourIn12 < 0 || hourIn12 > 12) {
+      throw new IllegalStateException("Decoded BPC hour must be 0..12: " + hourIn12);
+    }
+    if (hourIn12 == 12) {
+      return pm ? 12 : 0;
+    }
+    return pm ? hourIn12 + 12 : hourIn12;
+  }
+
+  private static int requireInclusiveRange(
+      final int value,
+      final int min,
+      final int max,
+      final String fieldName
+  ) {
+    if (value < min || value > max) {
+      throw new IllegalArgumentException(fieldName + " must be " + min + ".." + max + ": " + value);
+    }
+    return value;
+  }
+
   public long getBitString(final boolean msb0) {
     throw new UnsupportedOperationException("Unsupported for BCP packet");
   }
@@ -177,7 +215,12 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
       }
     }
 
-    return true;
+    return this.getHours() >= 1 && this.getHours() <= 12
+        && this.getMinutes() >= 0 && this.getMinutes() <= 59
+        && this.getDayOfWeek() >= 1 && this.getDayOfWeek() <= 7
+        && this.getDayOfMonth() >= 1 && this.getDayOfMonth() <= 31
+        && this.getMonth() >= 1 && this.getMonth() <= 12
+        && this.getYearInCentury() >= 0 && this.getYearInCentury() <= 99;
   }
 
   public boolean isPM() {
@@ -211,9 +254,10 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   @Override
   public String toString() {
+    final int hour24 = to24Hour(this.getHours(), this.isPM());
     final StringBuilder buffer = new StringBuilder(this.getClass().getSimpleName());
     buffer.append('(')
-        .append(",hours=").append(this.getHours() + (this.isPM() ? 12 : 0))
+        .append(",hours=").append(hour24)
         .append(",minutes=").append(this.getMinutes())
         .append(",dayOfWeek=").append(this.getDayOfWeek())
         .append(",dayOfMonth=").append(this.getDayOfMonth())
@@ -265,11 +309,12 @@ public final class BpcRecord extends AbstractMinuteBasedTimeSignalRecord {
 
   @Override
   public ZonedDateTime extractSourceTime() {
+    final int hour24 = to24Hour(this.getHours(), this.isPM());
     return ZonedDateTime.of(
         this.getYearInCentury() + currentCentury(),
         this.getMonth(),
         this.getDayOfMonth(),
-        this.getHours() + (this.isPM() ? 12 : 0),
+        hour24,
         this.getMinutes(),
         this.getSecond(),
         0,
