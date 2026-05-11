@@ -16,7 +16,7 @@ public class SignalProgressBar extends JPanel {
   private static final int TIMER_DELAY = 30;
   private static final float MAX_STROKE_WIDTH = 2.6f;
   private static final float MIN_STROKE_WIDTH = 0.7f;
-  private static final SignalColorPreset ACTIVE_SIGNAL_COLOR = SignalColorPreset.AMBER;
+  private static final SignalColorPreset ACTIVE_SIGNAL_COLOR = SignalColorPreset.LIGHT_BLUE;
   private final AtomicReference<Timer> timerRef = new AtomicReference<>();
   private int offset = 0;
 
@@ -136,6 +136,8 @@ public class SignalProgressBar extends JPanel {
 
   private enum SignalColorPreset {
     AMBER(new Color(178, 110, 22), new Color(255, 241, 214, 200), new Color(178, 110, 22, 220)),
+    LIGHT_BLUE(new Color(102, 194, 255), new Color(230, 247, 255, 200),
+        new Color(102, 194, 255, 220)),
     CYAN(new Color(33, 150, 243), new Color(222, 244, 255, 200), new Color(33, 150, 243, 220)),
     GREEN(new Color(57, 176, 91), new Color(230, 255, 238, 200), new Color(57, 176, 91, 220)),
     RED(new Color(207, 71, 71), new Color(255, 230, 230, 200), new Color(207, 71, 71, 220));
