@@ -197,7 +197,7 @@ public final class AppFrame extends JFrame {
 
         try {
           SourceDataLine line = (SourceDataLine) mixer.getLine(info);
-          // Compare classes and hashcodes to find a match
+          // Compare classes and hash codes to find a match
           if (line.getClass().equals(defaultLine.getClass())) {
             return new OutputLineInfo(line, mixerInfo);
           }
@@ -207,6 +207,8 @@ public final class AppFrame extends JFrame {
       }
     } catch (LineUnavailableException e) {
       System.err.println("Failed to get default output line: " + e.getMessage());
+    } catch (IllegalArgumentException e) {
+      System.err.println("Failed to get default output, may be there is no SourceDataLine: " + e.getMessage());
     }
     return null;
   }

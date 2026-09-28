@@ -53,6 +53,7 @@
     <properties>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <app.version.raw>1.2.1</app.version.raw>
         <maven.compiler.release>11</maven.compiler.release>
     </properties>
 
